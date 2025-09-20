@@ -67,7 +67,7 @@
         .barcode-nutrition { font-size: 14px; color: #666; margin-bottom: 5px; }
         .barcode-actions { display: flex; gap: 10px; margin-top: 15px; }
         @media (max-width: 480px) { body { padding: 15px; padding-bottom: 60px; } .row { grid-template-columns: 1fr; } }
-        /* small 3px rounding for requested buttons (no other visual changes) */
+        /* small 3px rounding */
         .reset-btn,
         .decrement-btn,
         .duplicate-btn,
@@ -85,6 +85,9 @@
           border-radius: 3px;
         }
 
+        button, input, select, textarea {
+            -webkit-tap-highlight-color: transparent;
+        }
     </style>
 </head>
 <body>
