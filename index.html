@@ -70,9 +70,11 @@
         
         .empty { color: #999; font-style: italic; padding: 20px 0; }
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0; }
-        .nav button { background: none; color: #666; border: none; padding: 5px 10px; font-size: 14px; -webkit-tap-highlight-color: transparent; }
+        .nav button { background: none; color: #666; border: none; padding: 5px 10px; font-size: 14px; -webkit-tap-highlight-color: transparent; position: relative; transition: color 0.2s ease; }
         .nav button:focus { outline: none; }
+        .nav button::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%) scaleX(0); width: 30px; height: 2px; background: #000; transition: transform 0.2s ease; }
         .nav button.active { color: #000; font-weight: 500; }
+        .nav button.active::after { transform: translateX(-50%) scaleX(1); }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); z-index: 100; padding: 20px; overflow-y: auto; }
         .modal.active { display: block; }
         .modal-content { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border: 1px solid #000; }
