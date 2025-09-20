@@ -34,17 +34,51 @@
         .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
         .today-meal-info { flex: 1; }
         .remove-btn { background: none; color: #ff0000; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
-        .duplicate-btn, .decrement-btn { background: none; color: #000; border: 1px solid #000; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+        
+        /* Fix for sticky button states on mobile */
+        .duplicate-btn, .decrement-btn { 
+            background: none; 
+            color: #000; 
+            border: 1px solid #000; 
+            padding: 5px 10px; 
+            cursor: pointer; 
+            font-size: 12px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* Remove focus outline and handle active states properly */
+        .duplicate-btn:focus,
+        .decrement-btn:focus,
+        .remove-btn:focus,
+        .reset-btn:focus {
+            outline: none;
+        }
+        
+        /* Active state for visual feedback */
+        .duplicate-btn:active,
+        .decrement-btn:active,
+        .reset-btn:active {
+            background: #f5f5f5;
+        }
+        
+        .remove-btn:active {
+            opacity: 0.7;
+        }
+        
         .empty { color: #999; font-style: italic; padding: 20px 0; }
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0; }
-        .nav button { background: none; color: #666; border: none; padding: 5px 10px; font-size: 14px; }
+        .nav button { background: none; color: #666; border: none; padding: 5px 10px; font-size: 14px; -webkit-tap-highlight-color: transparent; }
+        .nav button:focus { outline: none; }
         .nav button.active { color: #000; font-weight: 500; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); z-index: 100; padding: 20px; overflow-y: auto; }
         .modal.active { display: block; }
         .modal-content { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border: 1px solid #000; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-size: 18px; font-weight: normal; }
-        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; color: #000; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .portion-input { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
         .portion-input input { width: 80px; margin: 0; }
@@ -64,7 +98,7 @@
         .barcode-nutrition { font-size: 14px; color: #666; margin-bottom: 5px; }
         .barcode-actions { display: flex; gap: 10px; margin-top: 15px; }
         @media (max-width: 480px) { body { padding: 15px; padding-bottom: 60px; } .row { grid-template-columns: 1fr; } }
-        /* small 3px rounding */
+        /* small 3px rounding for requested buttons (no other visual changes) */
         .reset-btn,
         .decrement-btn,
         .duplicate-btn,
@@ -81,23 +115,7 @@
         button[onclick^="importFromPaste"] {
           border-radius: 3px;
         }
-        @media (hover: hover) {
-            button:hover { background: #333; }
-            button.secondary:hover { background: #f5f5f5; }
-            .scan-btn:hover { background: #333; }
-        }
-        button, input, select, textarea {
-            -webkit-tap-highlight-color: transparent;
-        }
 
-        button:active,
-        .scan-btn:active {
-            background: #333;
-        }
-
-        button.secondary:active {
-            background: #f5f5f5;
-        }
     </style>
 </head>
 <body>
@@ -215,10 +233,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Add Meal</h3>
-                <div>
-                    <button class="close-btn" onclick="closeMealModal()">×</button>
-                    <button type="button" class="secondary" onclick="closeMealModal()">Cancel</button>
-                </div>
+                <button class="close-btn" onclick="closeMealModal()">×</button>
             </div>
            
             <form id="mealForm">
@@ -374,7 +389,15 @@
                             <button class="remove-btn" onclick="removeTodayMeal(${index})">Remove</button>
                         </div>
                     </div>`).join('');
-
+                    
+                // Add blur after a short delay to remove focus from buttons
+                setTimeout(() => {
+                    document.querySelectorAll('.decrement-btn, .duplicate-btn, .remove-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            setTimeout(() => this.blur(), 50);
+                        });
+                    });
+                }, 0);
             }
 
             // Replace duplicate logic with a single adjust function (preserves names used by HTML)
@@ -398,11 +421,6 @@
                     meal.fat = original.fat * newPortions;
                 }
                 saveState(); updateProgress(); renderTodaysMeals();
-                 setTimeout(() => {
-                    if (document.activeElement instanceof HTMLElement) {
-                        document.activeElement.blur();
-                    }
-                }, 150);
             }
             function duplicateMeal(index){ adjustMealPortions(index, +1); }
             function decrementMeal(index){ adjustMealPortions(index, -1); }
