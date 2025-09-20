@@ -361,6 +361,7 @@
                             <button class="remove-btn" onclick="removeTodayMeal(${index})">Remove</button>
                         </div>
                     </div>`).join('');
+
             }
 
             // Replace duplicate logic with a single adjust function (preserves names used by HTML)
@@ -384,6 +385,7 @@
                     meal.fat = original.fat * newPortions;
                 }
                 saveState(); updateProgress(); renderTodaysMeals();
+                if (document.activeElement) document.activeElement.blur();
             }
             function duplicateMeal(index){ adjustMealPortions(index, +1); }
             function decrementMeal(index){ adjustMealPortions(index, -1); }
