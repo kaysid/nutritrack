@@ -37,19 +37,19 @@
         
         /* Fix for sticky button states on mobile */
         .duplicate-btn, .decrement-btn { 
-            background: none; 
+            background: #fff; 
             color: #000; 
             border: 1px solid #000; 
             padding: 5px 10px; 
             cursor: pointer; 
             font-size: 12px;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
         }
         
-        /* Remove focus outline and handle active states properly */
+        /* Remove focus outline */
         .duplicate-btn:focus,
         .decrement-btn:focus,
         .remove-btn:focus,
@@ -59,13 +59,18 @@
         
         /* Active state for visual feedback */
         .duplicate-btn:active,
-        .decrement-btn:active,
+        .decrement-btn:active {
+            background: #000;
+            color: #fff;
+        }
+        
         .reset-btn:active {
-            background: #f5f5f5;
+            background: #000;
+            color: #fff;
         }
         
         .remove-btn:active {
-            opacity: 0.7;
+            opacity: 0.5;
         }
         
         .empty { color: #999; font-style: italic; padding: 20px 0; }
