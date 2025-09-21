@@ -2,301 +2,593 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>NutriTrack</title>
+   
     <style>
-        /* Assuming basic styles are present; add any necessary for layout */
-        .macro { display: flex; flex-direction: column; }
-        .bar { height: 10px; background: grey; }
-        .fill { height: 100%; background: green; }
-        .meal-card { border: 1px solid #ccc; padding: 10px; margin: 5px; display: flex; justify-content: space-between; align-items: center; }
-        .hidden { display: none; }
-        /* No animation yet, as this is first version */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #000; padding: 20px; padding-bottom: 70px; max-width: 600px; margin: 0 auto; }
+        .header { margin-bottom: 30px; }
+        .header h1 { font-size: 24px; font-weight: normal; margin-bottom: 10px; }
+        .date-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #666; }
+        .reset-btn { background: none; border: 1px solid #000; padding: 5px 10px; cursor: pointer; font-size: 12px; color: #000; }
+        .section { margin-bottom: 40px; }
+        .section-title { font-size: 18px; font-weight: normal; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .progress-item { margin-bottom: 15px; }
+        .progress-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+        .progress-bar { height: 20px; background: #f5f5f5; position: relative; overflow: hidden; border-radius: 3px; }
+        .progress-fill { height: 100%; background: #000; transition: width 0.3s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; color: #fff; font-size: 11px; border-radius: 3px; }
+        .progress-fill.over { background: #ff0000; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; font-size: 14px; margin-bottom: 10px; }
+        input:focus { outline: none; border-color: #000; }
+        button { background: #000; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-size: 14px; }
+        button.secondary { background: none; color: #000; border: 1px solid #000; }
+        .meal-item { padding: 10px; border: 1px solid #eee; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .meal-info { flex: 1; }
+        .meal-name { font-weight: 500; margin-bottom: 2px; }
+        .meal-macros { font-size: 12px; color: #666; }
+        .meal-actions { display: flex; gap: 10px; }
+        .meal-actions button { padding: 5px 10px; font-size: 12px; transition: all 0.2s ease-in-out; }
+        .meal-actions button.added { background: #28a745; color: #fff; transform: scale(1.05); }
+        .meal-count { color: #007bff; font-weight: 500; margin-left: 8px; font-size: 13px; }
+        .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .today-meal-info { flex: 1; }
+        .remove-btn { background: none; color: #ff0000; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+        
+        /* Fix for sticky button states on mobile */
+        .duplicate-btn, .decrement-btn { 
+            background: #fff; 
+            color: #000; 
+            border: 1px solid #000; 
+            padding: 5px 10px; 
+            cursor: pointer; 
+            font-size: 12px;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* Remove focus outline */
+        .duplicate-btn:focus,
+        .decrement-btn:focus,
+        .remove-btn:focus,
+        .reset-btn:focus {
+            outline: none;
+        }
+        
+        /* Active state for visual feedback */
+        .duplicate-btn:active,
+        .decrement-btn:active {
+            background: #000;
+            color: #fff;
+        }
+        
+        .reset-btn:active {
+            background: #000;
+            color: #fff;
+        }
+        
+        .remove-btn:active {
+            opacity: 0.5;
+        }
+        
+        .empty { color: #999; font-style: italic; padding: 20px 0; }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 15px 0; }
+        .nav button { background: none; color: #666; border: none; padding: 8px 10px; font-size: 14px; -webkit-tap-highlight-color: transparent; position: relative; transition: color 0.2s ease; }
+        .nav button:focus { outline: none; }
+        .nav button::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%) scaleX(0); width: 30px; height: 2px; background: #000; transition: transform 0.2s ease; }
+        .nav button.active { color: #000; font-weight: 500; }
+        .nav button.active::after { transform: translateX(-50%) scaleX(1); }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); z-index: 100; padding: 20px; overflow-y: auto; }
+        .modal.active { display: block; }
+        .modal-content { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border: 1px solid #000; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 18px; font-weight: normal; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; color: #000; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .portion-input { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+        .portion-input input { width: 80px; margin: 0; }
+        .scan-btn { background: #000; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px; }
+        #scanner-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 200; display: none; }
+        #scanner-container.active { display: block; }
+        #scanner-video { width: 100%; height: 100%; object-fit: cover; }
+        .scanner-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+        .scanner-header { background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); padding: 20px; pointer-events: auto; }
+        .scanner-close { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 10px 20px; cursor: pointer; font-size: 14px; }
+        .scanner-target { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 150px; border: 2px solid #00ff00; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5); }
+        .scanner-info { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 20px; text-align: center; color: #fff; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #000; border-radius: 50%; animation: spin 1s linear infinite; margin-left: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .barcode-result { padding: 15px; background: #f5f5f5; border: 1px solid #ddd; margin-bottom: 15px; }
+        .barcode-product-name { font-weight: 500; margin-bottom: 10px; }
+        .barcode-nutrition { font-size: 14px; color: #666; margin-bottom: 5px; }
+        .barcode-actions { display: flex; gap: 10px; margin-top: 15px; }
+        @media (max-width: 480px) { body { padding: 15px; padding-bottom: 60px; } .row { grid-template-columns: 1fr; } }
+        /* small 3px rounding for requested buttons (no other visual changes) */
+        .reset-btn,
+        .decrement-btn,
+        .duplicate-btn,
+        .scan-btn,
+        .scanner-close,
+        .scanner-target,
+        .meal-actions button,
+        #mealForm button[type="submit"],
+        #targetsForm button[type="submit"],
+        .button-copy-import,
+        .barcode-actions button,
+        button[onclick^="copyDataToClipboard"],
+        button[onclick="openAddMealModal()"],
+        button[onclick^="importFromPaste"] {
+          border-radius: 3px;
+        }
+
     </style>
 </head>
 <body>
-
-    <header>
-        NutriTrack
-        <button id="reset-btn">Reset</button>
-    </header>
-
-    <section id="progress">
-        <h1>Today</h1>
-        <div class="macro">
-            <div>Calories 0 / 2000</div>
-            <div class="bar"><div class="fill" style="width: 0%;"></div></div>
-            <div class="percent">0%</div>
-        </div>
-        <div class="macro">
-            <div>Protein 0g / 50g</div>
-            <div class="bar"><div class="fill" style="width: 0%;"></div></div>
-            <div class="percent">0%</div>
-        </div>
-        <div class="macro">
-            <div>Carbs 0g / 250g</div>
-            <div class="bar"><div class="fill" style="width: 0%;"></div></div>
-            <div class="percent">0%</div>
-        </div>
-        <div class="macro">
-            <div>Fat 0g / 65g</div>
-            <div class="bar"><div class="fill" style="width: 0%;"></div></div>
-            <div class="percent">0%</div>
-        </div>
-        <h2>Meals</h2>
-        <div id="today-meals"></div>
-    </section>
-
-    <section id="meals">
-        <h2>Meal Library</h2>
-        <div class="meal-library">
-            <button id="add-meal-library-btn">+ Add</button>
-            <button id="scan-barcode-btn">Scan Barcode</button>
-            <div id="meal-library"></div>
-        </div>
-    </section>
-
-    <section id="settings">
-        <h2>Daily Targets</h2>
-        <div class="targets-form">
-            <label>Calories</label>
-            <input id="target-cal" type="number" value="2000">
-            <label>Protein (g)</label>
-            <input id="target-pro" type="number" value="50">
-            <label>Carbs (g)</label>
-            <input id="target-car" type="number" value="250">
-            <label>Fat (g)</label>
-            <input id="target-fat" type="number" value="65">
-            <button id="save-targets">Save</button>
-        </div>
-        <h2>Data Management</h2>
-        <button id="copy-data">Copy Data to Clipboard</button>
-        <button id="import-data">Import from Paste</button>
-    </section>
-
-    <nav>
-        <a href="#progress">Progress</a>
-        <a href="#meals">Meals</a>
-        <a href="#settings">Settings</a>
-    </nav>
-
-    <!-- Modals -->
-    <div id="add-meal-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h2>Add Meal</h2>
-            <span class="close">&times;</span>
-            <label>Name</label>
-            <input id="meal-name" type="text">
-            <label>Calories</label>
-            <input id="meal-cal" type="number">
-            <label>Protein (g)</label>
-            <input id="meal-pro" type="number">
-            <label>Carbs (g)</label>
-            <input id="meal-car" type="number">
-            <label>Fat (g)</label>
-            <input id="meal-fat" type="number">
-            <button id="add-meal-btn">Add</button>
+    <div class="header">
+        <h1>NutriTrack</h1>
+        <div class="date-info">
+            <span id="currentDate"></span>
+            <button class="reset-btn" onclick="resetDailyIntake()">Reset</button>
         </div>
     </div>
-
-    <div id="add-to-today-modal" class="modal" style="display: none;">
+    <div class="section" id="progressSection">
+        <h2 class="section-title">Today</h2>
+       
+        <div class="progress-item">
+            <div class="progress-label">
+                <span>Calories</span>
+                <span id="caloriesText">0 / 2000</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="caloriesBar" style="width: 0%">
+                    <span id="caloriesPercent">0%</span>
+                </div>
+            </div>
+        </div>
+        <div class="progress-item">
+            <div class="progress-label">
+                <span>Protein</span>
+                <span id="proteinText">0g / 50g</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="proteinBar" style="width: 0%">
+                    <span id="proteinPercent">0%</span>
+                </div>
+            </div>
+        </div>
+        <div class="progress-item">
+            <div class="progress-label">
+                <span>Carbs</span>
+                <span id="carbsText">0g / 250g</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="carbsBar" style="width: 0%">
+                    <span id="carbsPercent">0%</span>
+                </div>
+            </div>
+        </div>
+        <div class="progress-item">
+            <div class="progress-label">
+                <span>Fat</span>
+                <span id="fatText">0g / 65g</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="fatBar" style="width: 0%">
+                    <span id="fatPercent">0%</span>
+                </div>
+            </div>
+        </div>
+        <h3 style="font-size: 16px; margin: 30px 0 15px; font-weight: normal;">Meals</h3>
+        <div id="todayMealsList"></div>
+    </div>
+    <div class="section" id="mealsSection" style="display: none;">
+        <h2 class="section-title">
+            Meal Library
+            <button class="secondary" style="float: right; margin-top: -5px;" onclick="openAddMealModal()">+ Add</button>
+        </h2>
+        <button class="scan-btn" onclick="startBarcodeScanner()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <line x1="7" y1="12" x2="17" y2="12"/>
+            </svg>
+            Scan Barcode
+        </button>
+        <input type="text" id="mealSearch" placeholder="Search..." oninput="filterMeals()">
+        <div id="mealList"></div>
+    </div>
+    <div class="section" id="settingsSection" style="display: none;">
+        <h2 class="section-title">Daily Targets</h2>
+       
+        <form id="targetsForm">
+            <label style="display: block; margin-bottom: 5px; font-size: 14px;">Calories</label>
+            <input type="number" id="targetCalories" min="0" max="10000" value="2000">
+           
+            <div class="row">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-size: 14px;">Protein (g)</label>
+                    <input type="number" id="targetProtein" min="0" max="500" value="50">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-size: 14px;">Carbs (g)</label>
+                    <input type="number" id="targetCarbs" min="0" max="1000" value="250">
+                </div>
+            </div>
+           
+            <label style="display: block; margin-bottom: 5px; font-size: 14px;">Fat (g)</label>
+            <input type="number" id="targetFat" min="0" max="500" value="65">
+           
+            <button type="submit" style="margin-top: 10px;">Save</button>
+        </form>
+       
+        <h2 class="section-title" style="margin-top: 40px;">Data Management</h2>
+        
+        <div style="margin-bottom: 20px;">
+            <button onclick="copyDataToClipboard()" class="secondary" style="margin-bottom: 10px;">Copy Data to Clipboard</button>
+            <textarea id="pasteData" placeholder="Or paste data here..." style="height: 100px; font-size: 12px;"></textarea>
+            <button onclick="importFromPaste()" class="secondary">Import from Paste</button>
+        </div>
+       
+    </div>
+    <div class="nav">
+        <button data-section="progress" class="active">Progress</button>
+        <button data-section="meals">Meals</button>
+        <button data-section="settings">Settings</button>
+    </div>
+    <div class="modal" id="mealModal">
         <div class="modal-content">
-            <h2>Add to Today</h2>
-            <span class="close">&times;</span>
-            <label>servings</label>
-            <input id="servings" type="number" value="1">
-            <button id="add-from-modal-btn">Add</button>
+            <div class="modal-header">
+                <h3 class="modal-title">Add Meal</h3>
+                <button class="close-btn" onclick="closeMealModal()">×</button>
+            </div>
+           
+            <form id="mealForm">
+                <input type="text" id="mealName" placeholder="Meal name" required>
+               
+                <div class="row">
+                    <input type="number" id="mealCalories" placeholder="Calories" min="0" required>
+                    <input type="number" id="mealProtein" placeholder="Protein (g)" min="0" step="0.1" required>
+                </div>
+               
+                <div class="row">
+                    <input type="number" id="mealCarbs" placeholder="Carbs (g)" min="0" step="0.1" required>
+                    <input type="number" id="mealFat" placeholder="Fat (g)" min="0" step="0.1" required>
+                </div>
+               
+                <input type="text" id="servingSize" placeholder="Serving size" value="1 serving">
+               
+                <button type="submit">Add</button>
+            </form>
         </div>
     </div>
-
-    <div id="product-found-modal" class="modal" style="display: none;">
+    <div class="modal" id="portionModal">
         <div class="modal-content">
-            <h2>Product Found</h2>
-            <span class="close">&times;</span>
-            <!-- Product info would go here -->
+            <div class="modal-header">
+                <h3 class="modal-title">Add to Today</h3>
+                <button class="close-btn" onclick="closePortionModal()">×</button>
+            </div>
+           
+            <div id="selectedMealInfo" style="padding: 10px; background: #f5f5f5; margin-bottom: 15px;"></div>
+           
+            <div class="portion-input">
+                <input type="number" id="portionAmount" value="1" min="0.1" step="0.1">
+                <span>servings</span>
+            </div>
+           
+            <button onclick="confirmAddMeal()">Add</button>
         </div>
     </div>
-
-    <div id="scanner-modal" class="modal" style="display: none;">
+    <div class="modal" id="barcodeModal">
         <div class="modal-content">
-            <button id="close-scanner">Close Scanner</button>
-            <div>Point Camera at Barcode [Security Blocks Previews]</div>
-            <!-- Video element for scanner would go here -->
+            <div class="modal-header">
+                <h3 class="modal-title">Product Found</h3>
+                <button class="close-btn" onclick="closeBarcodeModal()">×</button>
+            </div>
+           
+            <div id="barcodeResult"></div>
         </div>
     </div>
-
+    <div id="scanner-container">
+        <video id="scanner-video" autoplay muted playsinline></video>
+        <div class="scanner-overlay">
+            <div class="scanner-header">
+                <button class="scanner-close" onclick="stopBarcodeScanner()">Close Scanner</button>
+            </div>
+            <div class="scanner-target"></div>
+            <div class="scanner-info">
+                <p>Point Camera at Barcode</p>
+                <p id="scannerStatus">[Security Blocks Previews]</p>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <script>
-        // Data structures
-        let dailyTargets = { calories: 2000, protein: 50, carbs: 250, fat: 65 };
-        let mealLibrary = [];
-        let todaysMeals = [];
-        let currentMealName = '';
+        function escapeHTML(str) {
+  return String(str || '').replace(/[&<>"'`=\/]/g, function (s) {
+    return ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
+    })[s];
+  });
+}
 
-        // Update macro displays
-        function updateMacros() {
-            let totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-            todaysMeals.forEach(m => {
-                for (let key in totals) {
-                    totals[key] += m[key] * m.servings;
+        document.addEventListener('DOMContentLoaded', function () {
+            // tiny helper to reduce repeated document.getElementById calls
+            const $ = id => document.getElementById(id);
+
+            let appState = {
+                targets: { calories: 2000, protein: 50, carbs: 250, fat: 65 },
+                dailyIntake: { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] },
+                mealLibrary: [],
+                currentDate: new Date().toDateString(),
+                selectedMeal: null,
+                editingMealId: null,
+                scannedProduct: null
+            };
+
+            const defaultMeals = [
+                { id: Date.now() + 1, name: "Chicken Breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, servingSize: "100g" },
+                { id: Date.now() + 2, name: "Brown Rice", calories: 112, protein: 2.6, carbs: 23.5, fat: 0.9, servingSize: "100g" },
+                { id: Date.now() + 3, name: "Avocado", calories: 160, protein: 2, carbs: 9, fat: 15, servingSize: "100g" },
+                { id: Date.now() + 4, name: "Greek Yogurt", calories: 100, protein: 10, carbs: 6, fat: 0, servingSize: "150g" },
+                { id: Date.now() + 5, name: "Banana", calories: 105, protein: 1.3, carbs: 27, fat: 0.4, servingSize: "1 medium" },
+                { id: Date.now() + 6, name: "Oatmeal", calories: 150, protein: 5, carbs: 27, fat: 3, servingSize: "1/2 cup" },
+                { id: Date.now() + 7, name: "Almonds", calories: 164, protein: 6, carbs: 6, fat: 14, servingSize: "28g" },
+                { id: Date.now() + 8, name: "Egg", calories: 70, protein: 6, carbs: 0.5, fat: 5, servingSize: "1 large" },
+                { id: Date.now() + 9, name: "Broccoli", calories: 31, protein: 2.5, carbs: 6, fat: 0.4, servingSize: "100g" },
+                { id: Date.now() + 10, name: "Salmon", calories: 208, protein: 22, carbs: 0, fat: 13, servingSize: "100g" }
+            ];
+
+            function init() { loadState(); checkDateReset(); updateDate(); updateProgress(); renderMealLibrary(); renderTodaysMeals(); loadTargetInputs(); window.showSection('progress', document.querySelector('.nav button[data-section="progress"]')); }
+            function loadState() { const saved = localStorage.getItem('nutritionAppState'); if (saved) { appState = { ...appState, ...JSON.parse(saved) }; } else { appState.mealLibrary = defaultMeals; saveState(); } }
+            function saveState() { localStorage.setItem('nutritionAppState', JSON.stringify(appState)); }
+            function checkDateReset() { const today = new Date().toDateString(); if (appState.currentDate !== today) { appState.currentDate = today; appState.dailyIntake = { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] }; saveState(); } }
+            function updateDate() { const options = { weekday: 'short', month: 'short', day: 'numeric' }; $('currentDate').textContent = new Date().toLocaleDateString('en-US', options); }
+
+            // compact progress update using macro keys & $ helper
+            function updateProgress() {
+                const macros = ['calories','protein','carbs','fat'];
+                macros.forEach(m => {
+                    const current = appState.dailyIntake[m] || 0;
+                    const target = appState.targets[m] || 1;
+                    const percentage = Math.min((current / target) * 100, 999);
+                    const bar = $(m + 'Bar');
+                    const text = $(m + 'Text');
+                    const pct = $(m + 'Percent');
+                    bar.style.width = Math.min(percentage, 100) + '%';
+                    pct.textContent = Math.round(percentage) + '%';
+                    if (m === 'calories') text.textContent = `${Math.round(current)} / ${target}`; else text.textContent = `${current.toFixed(1)}g / ${target}g`;
+                    bar.classList.toggle('over', percentage > 100);
+                });
+            }
+
+            function renderMealLibrary() {
+                const mealList = $('mealList');
+                const searchTerm = $('mealSearch').value.toLowerCase();
+                const filtered = appState.mealLibrary.filter(m => m.name.toLowerCase().includes(searchTerm));
+                if (filtered.length === 0) { mealList.innerHTML = '<div class="empty">No meals found</div>'; return; }
+                mealList.innerHTML = filtered.map(meal => {
+                    const todaysMeal = appState.dailyIntake.meals.find(m => m.id === meal.id);
+                    const count = todaysMeal ? todaysMeal.portions : 0;
+                    const countDisplay = count > 0 ? `<span class="meal-count">(${count.toFixed(1).replace(/\.0$/, '')}x)</span>` : '';
+                    return `
+                    <div class="meal-item" data-id="${meal.id}">
+                        <div class="meal-info">
+                            <div class="meal-name">${escapeHTML(meal.name)} ${countDisplay}</div>
+                            <div class="meal-macros">${meal.calories}cal • P:${meal.protein}g • C:${meal.carbs}g • F:${meal.fat}g • ${escapeHTML(meal.servingSize)}</div>
+                        </div>
+                        <div class="meal-actions">
+                            <button onclick="addMealFromLibrary(${meal.id}, this)">Add</button>
+                            <button class="secondary" onclick="deleteMeal(${meal.id})">Del</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            function renderTodaysMeals() {
+                const todayList = $('todayMealsList');
+                if (appState.dailyIntake.meals.length === 0) { todayList.innerHTML = '<div class="empty">No meals today</div>'; return; }
+                todayList.innerHTML = appState.dailyIntake.meals.map((meal, index) => `
+                    <div class="today-meal" data-index="${index}">
+                        <div class="today-meal-info">
+                            <div>${escapeHTML(meal.name)} ${meal.portions > 1 ? `(${meal.portions.toFixed(1).replace(/\.0$/, '')}x)` : ''}</div>
+                            <div style="font-size: 12px; color: #666;">${Math.round(meal.calories)}cal • P:${meal.protein.toFixed(1)}g • C:${meal.carbs.toFixed(1)}g • F:${meal.fat.toFixed(1)}g</div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="decrement-btn" onclick="decrementMeal(${index})">-</button>
+                            <button class="duplicate-btn" onclick="duplicateMeal(${index})">+</button>
+                            <button class="remove-btn" onclick="removeTodayMeal(${index})">Remove</button>
+                        </div>
+                    </div>`).join('');
+                    
+                // Add blur after a short delay to remove focus from buttons
+                setTimeout(() => {
+                    document.querySelectorAll('.decrement-btn, .duplicate-btn, .remove-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            setTimeout(() => this.blur(), 50);
+                        });
+                    });
+                }, 0);
+            }
+
+            // Replace duplicate logic with a single adjust function (preserves names used by HTML)
+            function adjustMealPortions(index, delta) {
+                const meal = appState.dailyIntake.meals[index]; if (!meal) return;
+                const original = appState.mealLibrary.find(m => m.id === meal.id) || { calories: meal.calories / (meal.portions||1), protein: meal.protein/(meal.portions||1), carbs: meal.carbs/(meal.portions||1), fat: meal.fat/(meal.portions||1) };
+                const newPortions = (meal.portions || 1) + delta;
+                if (newPortions < 0.1) { // allow for smaller portions, but remove if near zero
+                    // remove
+                    appState.dailyIntake.calories -= meal.calories; appState.dailyIntake.protein -= meal.protein; appState.dailyIntake.carbs -= meal.carbs; appState.dailyIntake.fat -= meal.fat; appState.dailyIntake.meals.splice(index,1);
+                } else {
+                    // adjust totals by delta using original per-portion values
+                    appState.dailyIntake.calories += original.calories * delta;
+                    appState.dailyIntake.protein += original.protein * delta;
+                    appState.dailyIntake.carbs += original.carbs * delta;
+                    appState.dailyIntake.fat += original.fat * delta;
+                    meal.portions = newPortions;
+                    meal.calories = original.calories * newPortions;
+                    meal.protein = original.protein * newPortions;
+                    meal.carbs = original.carbs * newPortions;
+                    meal.fat = original.fat * newPortions;
                 }
-            });
-            const macros = ['calories', 'protein', 'carbs', 'fat'];
-            const units = ['', 'g', 'g', 'g'];
-            macros.forEach((key, index) => {
-                let macroDiv = document.querySelectorAll('#progress .macro')[index];
-                let total = Math.round(totals[key]);
-                let target = dailyTargets[key];
-                let unit = units[index];
-                macroDiv.querySelector('div:first-child').textContent = `${key.charAt(0).toUpperCase() + key.slice(1)} ${total}${unit} / ${target}${unit}`;
-                let percent = Math.min((totals[key] / target * 100), 100).toFixed(0);
-                macroDiv.querySelector('.fill').style.width = percent + '%';
-                macroDiv.querySelector('.percent').textContent = percent + '%';
-            });
-        }
+                saveState(); updateProgress(); renderTodaysMeals();
+            }
+            function duplicateMeal(index){ adjustMealPortions(index, +1); }
+            function decrementMeal(index){ adjustMealPortions(index, -1); }
+            window.duplicateMeal = duplicateMeal; window.decrementMeal = decrementMeal;
 
-        // Render today's meals in Progress tab with merging and increment/decrement
-        function renderTodaysMeals() {
-            const mealsDiv = document.getElementById('today-meals');
-            mealsDiv.innerHTML = '';
-            todaysMeals.forEach(m => {
-                const countStr = m.servings > 1 ? ` (${m.servings}x)` : '';
-                const card = document.createElement('div');
-                card.className = 'meal-card';
-                card.innerHTML = `
-                    <span>${m.name}${countStr}</span>
-                    <span>Cal: ${m.calories}</span>
-                    <span>Pro: ${m.protein}g</span>
-                    <span>Car: ${m.carbs}g</span>
-                    <span>Fat: ${m.fat}g</span>
-                    <button onclick="incrementMeal('${m.name}', 1)">+</button>
-                    <button onclick="incrementMeal('${m.name}', -1)">-</button>
-                `;
-                mealsDiv.appendChild(card);
-            });
-            updateMacros();
-        }
+            function filterMeals() { renderMealLibrary(); }
+            function loadTargetInputs() { $('targetCalories').value = appState.targets.calories; $('targetProtein').value = appState.targets.protein; $('targetCarbs').value = appState.targets.carbs; $('targetFat').value = appState.targets.fat; }
 
-        // Increment/decrement servings, remove if <=0
-        window.incrementMeal = function(name, delta) {
-            const m = todaysMeals.find(m => m.name === name);
-            if (m) {
-                m.servings += delta;
-                if (m.servings <= 0) {
-                    todaysMeals = todaysMeals.filter(m => m.name !== name);
+            window.showSection = function (section, buttonElement) {
+                $('progressSection').style.display = 'none'; $('mealsSection').style.display = 'none'; $('settingsSection').style.display = 'none';
+                if (section === 'progress') {
+                    $('progressSection').style.display = 'block';
+                } else if (section === 'meals') {
+                    $('mealsSection').style.display = 'block';
+                    renderMealLibrary(); // Refresh meal library counts
+                } else if (section === 'settings') {
+                    $('settingsSection').style.display = 'block';
                 }
+                document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+                if (buttonElement) buttonElement.classList.add('active'); else document.querySelector(`.nav button[data-section="${section}"]`).classList.add('active');
+            }
+
+            window.openAddMealModal = function() { $('mealForm').reset(); $('mealModal').classList.add('active'); appState.editingMealId = null; }
+            window.closeMealModal = function() { $('mealModal').classList.remove('active'); $('mealForm').reset(); appState.editingMealId = null; }
+            window.openPortionModal = function(mealId) { const meal = appState.mealLibrary.find(m => m.id === mealId); if (!meal) return; appState.selectedMeal = meal; $('selectedMealInfo').innerHTML = `<strong>${escapeHTML(meal.name)}</strong><br>Per ${escapeHTML(meal.servingSize)}: ${meal.calories}cal • P:${meal.protein}g • C:${meal.carbs}g • F:${meal.fat}g`; $('portionAmount').value = 1; $('portionModal').classList.add('active'); }
+            window.closePortionModal = function() { $('portionModal').classList.remove('active'); appState.selectedMeal = null; }
+            
+            window.addMealFromLibrary = function(mealId, buttonElement) {
+                const mealFromLibrary = appState.mealLibrary.find(m => m.id === mealId);
+                if (!mealFromLibrary) return;
+                
+                const portions = 1; // Add one serving at a time from library
+                const existingMeal = appState.dailyIntake.meals.find(meal => meal.id === mealId);
+
+                if (existingMeal) {
+                    existingMeal.portions += portions;
+                    existingMeal.calories += mealFromLibrary.calories * portions;
+                    existingMeal.protein += mealFromLibrary.protein * portions;
+                    existingMeal.carbs += mealFromLibrary.carbs * portions;
+                    existingMeal.fat += mealFromLibrary.fat * portions;
+                } else {
+                    const newDailyMeal = { ...mealFromLibrary, portions: portions, calories: mealFromLibrary.calories * portions, protein: mealFromLibrary.protein * portions, carbs: mealFromLibrary.carbs * portions, fat: mealFromLibrary.fat * portions };
+                    appState.dailyIntake.meals.push(newDailyMeal);
+                }
+                
+                appState.dailyIntake.calories += mealFromLibrary.calories * portions;
+                appState.dailyIntake.protein += mealFromLibrary.protein * portions;
+                appState.dailyIntake.carbs += mealFromLibrary.carbs * portions;
+                appState.dailyIntake.fat += mealFromLibrary.fat * portions;
+                
+                saveState();
+                updateProgress();
                 renderTodaysMeals();
-                renderMealLibrary(); // Sync with Meals tab counters if any (for future)
+                renderMealLibrary(); // Re-render to update count
+                
+                if (buttonElement) {
+                    const originalText = "Add";
+                    buttonElement.textContent = 'Added!';
+                    buttonElement.classList.add('added');
+                    buttonElement.disabled = true;
+                    setTimeout(() => {
+                        buttonElement.textContent = originalText;
+                        buttonElement.classList.remove('added');
+                        buttonElement.disabled = false;
+                    }, 800);
+                }
             }
-        }
+            
+            window.confirmAddMeal = function() {
+                if (!appState.selectedMeal) return;
+                const portions = parseFloat($('portionAmount').value) || 1;
+                
+                const existingMeal = appState.dailyIntake.meals.find(meal => meal.id === appState.selectedMeal.id);
 
-        // Add meal to today, merge if exists
-        function addToToday(meal, servings = 1) {
-            const existing = todaysMeals.find(m => m.name === meal.name);
-            if (existing) {
-                existing.servings += servings;
-            } else {
-                todaysMeals.push({ ...meal, servings });
-            }
-            renderTodaysMeals();
-        }
+                if (existingMeal) {
+                    // Update existing meal
+                    const addedCalories = appState.selectedMeal.calories * portions;
+                    const addedProtein = appState.selectedMeal.protein * portions;
+                    const addedCarbs = appState.selectedMeal.carbs * portions;
+                    const addedFat = appState.selectedMeal.fat * portions;
 
-        // Render meal library with add button opening modal
-        function renderMealLibrary() {
-            const libraryDiv = document.getElementById('meal-library');
-            libraryDiv.innerHTML = '';
-            mealLibrary.forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'meal-card';
-                card.innerHTML = `
-                    <span>${m.name}</span>
-                    <span>Cal: ${m.calories}</span>
-                    <span>Pro: ${m.protein}g</span>
-                    <span>Car: ${m.carbs}g</span>
-                    <span>Fat: ${m.fat}g</span>
-                    <button onclick="openAddToTodayModal('${m.name}')">Add to Today</button>
-                `;
-                libraryDiv.appendChild(card);
-            });
-        }
+                    existingMeal.portions += portions;
+                    existingMeal.calories += addedCalories;
+                    existingMeal.protein += addedProtein;
+                    existingMeal.carbs += addedCarbs;
+                    existingMeal.fat += addedFat;
 
-        // Add new meal from modal
-        function addMeal() {
-            const name = document.getElementById('meal-name').value.trim();
-            const calories = parseFloat(document.getElementById('meal-cal').value);
-            const protein = parseFloat(document.getElementById('meal-pro').value);
-            const carbs = parseFloat(document.getElementById('meal-car').value);
-            const fat = parseFloat(document.getElementById('meal-fat').value);
-            if (name && !isNaN(calories) && !isNaN(protein) && !isNaN(carbs) && !isNaN(fat)) {
-                mealLibrary.push({ name, calories, protein, carbs, fat });
-                renderMealLibrary();
-                document.getElementById('add-meal-modal').style.display = 'none';
-            }
-        }
+                    appState.dailyIntake.calories += addedCalories;
+                    appState.dailyIntake.protein += addedProtein;
+                    appState.dailyIntake.carbs += addedCarbs;
+                    appState.dailyIntake.fat += addedFat;
+                } else {
+                    // Add new meal
+                    const mealToAdd = {
+                        ...appState.selectedMeal,
+                        portions,
+                        calories: appState.selectedMeal.calories * portions,
+                        protein: appState.selectedMeal.protein * portions,
+                        carbs: appState.selectedMeal.carbs * portions,
+                        fat: appState.selectedMeal.fat * portions
+                    };
+                    appState.dailyIntake.meals.push(mealToAdd);
+                    appState.dailyIntake.calories += mealToAdd.calories;
+                    appState.dailyIntake.protein += mealToAdd.protein;
+                    appState.dailyIntake.carbs += mealToAdd.carbs;
+                    appState.dailyIntake.fat += mealToAdd.fat;
+                }
 
-        // Open add to today modal
-        window.openAddToTodayModal = function(name) {
-            currentMealName = name;
-            document.getElementById('add-to-today-modal').style.display = 'block';
-        }
-
-        // Add from modal
-        function addFromModal() {
-            const servings = parseFloat(document.getElementById('servings').value) || 1;
-            const meal = mealLibrary.find(m => m.name === currentMealName);
-            if (meal) {
-                addToToday(meal, servings);
-            }
-            document.getElementById('add-to-today-modal').style.display = 'none';
-        }
-
-        // Save targets
-        function saveTargets() {
-            dailyTargets.calories = parseFloat(document.getElementById('target-cal').value) || dailyTargets.calories;
-            dailyTargets.protein = parseFloat(document.getElementById('target-pro').value) || dailyTargets.protein;
-            dailyTargets.carbs = parseFloat(document.getElementById('target-car').value) || dailyTargets.carbs;
-            dailyTargets.fat = parseFloat(document.getElementById('target-fat').value) || dailyTargets.fat;
-            updateMacros();
-        }
-
-        // Copy data
-        function copyData() {
-            const data = { dailyTargets, mealLibrary };
-            navigator.clipboard.writeText(JSON.stringify(data));
-        }
-
-        // Import data
-        function importData() {
-            const paste = prompt('Paste data');
-            if (paste) {
-                const data = JSON.parse(paste);
-                dailyTargets = data.dailyTargets || dailyTargets;
-                mealLibrary = data.mealLibrary || mealLibrary;
-                renderMealLibrary();
+                saveState();
+                updateProgress();
                 renderTodaysMeals();
+                window.closePortionModal();
+                window.showSection('progress', document.querySelector('.nav button[data-section="progress"]'));
             }
-        }
 
-        // Event listeners
-        document.getElementById('reset-btn').onclick = () => {
-            todaysMeals = [];
-            renderTodaysMeals();
-        };
-        document.getElementById('add-meal-library-btn').onclick = () => document.getElementById('add-meal-modal').style.display = 'block';
-        document.getElementById('add-meal-btn').onclick = addMeal;
-        document.getElementById('add-from-modal-btn').onclick = addFromModal;
-        document.getElementById('save-targets').onclick = saveTargets;
-        document.getElementById('copy-data').onclick = copyData;
-        document.getElementById('import-data').onclick = importData;
-        // Close modals on x
-        document.querySelectorAll('.close').forEach(close => {
-            close.onclick = () => close.parentElement.parentElement.style.display = 'none';
+            window.removeTodayMeal = function(index) { const meal = appState.dailyIntake.meals[index]; if(!meal) return; appState.dailyIntake.calories -= meal.calories; appState.dailyIntake.protein -= meal.protein; appState.dailyIntake.carbs -= meal.carbs; appState.dailyIntake.fat -= meal.fat; appState.dailyIntake.meals.splice(index, 1); saveState(); updateProgress(); renderTodaysMeals(); }
+            window.deleteMeal = function(mealId) { if (confirm('Delete this meal?')) { appState.mealLibrary = appState.mealLibrary.filter(m => m.id !== mealId); saveState(); renderMealLibrary(); } }
+            window.resetDailyIntake = function() { if (confirm('Reset today?')) { appState.dailyIntake = { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] }; saveState(); updateProgress(); renderTodaysMeals(); renderMealLibrary(); } }
+
+            // Barcode / scanner / import/export code kept identical to original (no functional changes)
+            window.startBarcodeScanner = function() { const scannerContainer = $('scanner-container'); scannerContainer.classList.add('active'); Quagga.init({ inputStream: { name: "Live", type: "LiveStream", target: document.querySelector('#scanner-video'), constraints: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" } }, decoder: { readers: [ "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader" ] }, locate: true }, function(err) { if (err) { console.error(err); $('scannerStatus').textContent = 'Camera access denied'; setTimeout(() => window.stopBarcodeScanner(), 2000); return; } Quagga.start(); }); Quagga.onDetected(function(result) { const code = result.codeResult.code; Quagga.stop(); $('scanner-container').classList.remove('active'); fetchProductData(code); }); }
+            window.stopBarcodeScanner = function() { Quagga.stop(); $('scanner-container').classList.remove('active'); }
+            window.closeBarcodeModal = function() { $('barcodeModal').classList.remove('active'); appState.scannedProduct = null; }
+            window.addScannedProduct = function() { if (!appState.scannedProduct) return; const meal = { id: Date.now(), ...appState.scannedProduct }; appState.mealLibrary.unshift(meal); saveState(); renderMealLibrary(); window.closeBarcodeModal(); alert('Product added to meal library!'); }
+            window.addScannedProductAndUse = function() { if (!appState.scannedProduct) return; const meal = { id: Date.now(), ...appState.scannedProduct }; appState.mealLibrary.unshift(meal); saveState(); renderMealLibrary(); window.closeBarcodeModal(); setTimeout(() => window.openPortionModal(meal.id), 100); }
+
+            async function fetchProductData(barcode) { const barcodeModal = $('barcodeModal'); const barcodeResult = $('barcodeResult'); barcodeModal.classList.add('active'); barcodeResult.innerHTML = '<p>Fetching product information...<span class="loading"></span></p>'; try { const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`); const data = await response.json(); if (data.status === 1 && data.product) { displayProductData(data.product); } else { barcodeResult.innerHTML = `<p style="color: #666;">Product not found in database.</p><p style="margin-top: 10px;">You can add it manually using the form.</p><button onclick="closeBarcodeModal(); openAddMealModal();" style="margin-top: 15px;">Add Manually</button>`; } } catch (error) { console.error('Error fetching product:', error); barcodeResult.innerHTML = `<p style="color: #ff0000;">Error fetching product data.</p><p style="margin-top: 10px;">Please try again or add manually.</p><button onclick="closeBarcodeModal(); openAddMealModal();" style="margin-top: 15px;">Add Manually</button>`; } }
+            function displayProductData(product) { const barcodeResult = $('barcodeResult'); const nutrients = product.nutriments || {}; const servingSize = product.serving_size || '100g'; const calories = nutrients['energy-kcal_serving'] || nutrients['energy-kcal_100g'] || 0; const protein = nutrients.proteins_serving || nutrients.proteins_100g || 0; const carbs = nutrients.carbohydrates_serving || nutrients.carbohydrates_100g || 0; const fat = nutrients.fat_serving || nutrients.fat_100g || 0; const productName = product.product_name || 'Unknown Product'; const brand = product.brands || ''; appState.scannedProduct = { name: brand ? `${productName} (${brand})` : productName, calories: Math.round(calories), protein: parseFloat(protein.toFixed(1)), carbs: parseFloat(carbs.toFixed(1)), fat: parseFloat(fat.toFixed(1)), servingSize: servingSize }; barcodeResult.innerHTML = `
+                    <div class="barcode-result">
+                        <div class="barcode-product-name">${escapeHTML(appState.scannedProduct.name)}</div>
+                        <div class="barcode-nutrition">Per ${escapeHTML(appState.scannedProduct.servingSize)}</div>
+                        <div class="barcode-nutrition">Calories: ${appState.scannedProduct.calories}</div>
+                        <div class="barcode-nutrition">Protein: ${appState.scannedProduct.protein}g</div>
+                        <div class="barcode-nutrition">Carbs: ${appState.scannedProduct.carbs}g</div>
+                        <div class="barcode-nutrition">Fat: ${appState.scannedProduct.fat}g</div>
+                        <div class="barcode-actions">
+                            <button onclick="addScannedProduct()">Add to Library</button>
+                            <button class="secondary" onclick="addScannedProductAndUse()">Add & Use Now</button>
+                        </div>
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 15px;">Data from Open Food Facts. You can edit these values after adding.</p>`; }
+
+            document.getElementById('mealForm').addEventListener('submit', (e) => { e.preventDefault(); const meal = { id: appState.editingMealId || Date.now(), name: $('mealName').value, calories: parseFloat($('mealCalories').value), protein: parseFloat($('mealProtein').value), carbs: parseFloat($('mealCarbs').value), fat: parseFloat($('mealFat').value), servingSize: $('servingSize').value || '1 serving' }; if (appState.editingMealId) { const index = appState.mealLibrary.findIndex(m => m.id === appState.editingMealId); if (index !== -1) appState.mealLibrary[index] = meal; } else appState.mealLibrary.push(meal); saveState(); renderMealLibrary(); closeMealModal(); });
+
+            document.getElementById('targetsForm').addEventListener('submit', (e) => { e.preventDefault(); appState.targets = { calories: parseInt($('targetCalories').value), protein: parseInt($('targetProtein').value), carbs: parseInt($('targetCarbs').value), fat: parseInt($('targetFat').value) }; saveState(); updateProgress(); const btn = e.target.querySelector('button'); const originalText = btn.textContent; btn.textContent = 'Saved'; setTimeout(() => { btn.textContent = originalText; }, 1500); });
+
+            init();
+
+            window.copyDataToClipboard = function () { const dataStr = JSON.stringify(appState, null, 2); if (navigator.clipboard) navigator.clipboard.writeText(dataStr).then(() => alert('Data copied to clipboard! Save it in Notes app for backup.')).catch(() => { const textarea = document.createElement('textarea'); textarea.value = dataStr; document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea); alert('Data copied to clipboard!'); }); else { const textarea = document.createElement('textarea'); textarea.value = dataStr; document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea); alert('Data copied to clipboard!'); } }
+
+            window.importFromPaste = function () { const pasteData = $('pasteData').value.trim(); if (!pasteData) return alert('Please paste data first'); try { const imported = JSON.parse(pasteData); if (confirm('Replace all existing data with imported data?')) { appState.mealLibrary = imported.mealLibrary || []; appState.targets = imported.targets || {}; saveState(); loadTargetInputs(); renderMealLibrary(); updateProgress(); alert('Data replaced successfully!'); $('pasteData').value = ''; } } catch (err) { alert('Invalid data format. Please check and try again.'); console.error(err); } }
+
+            document.querySelectorAll('.nav button').forEach(button => { button.addEventListener('click', function () { const section = this.getAttribute('data-section'); window.showSection(section, this); }); });
         });
-        // Scanner and barcode buttons skipped for simplicity, as not central to task
-
-        // Initial renders
-        renderTodaysMeals();
-        renderMealLibrary();
     </script>
-
 </body>
 </html>
