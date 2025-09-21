@@ -23,7 +23,7 @@
         .progress-fill.over { background: #ff0000; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; font-size: 14px; margin-bottom: 10px; }
         input:focus { outline: none; border-color: #000; }
-        button { background: #000; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-size: 14px; }
+        button { background: #000; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-size: 14px; -webkit-tap-highlight-color: transparent; }
         button.secondary { background: none; color: #000; border: 1px solid #000; }
         .meal-item { padding: 10px; border: 1px solid #eee; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .meal-info { flex: 1; }
@@ -37,7 +37,6 @@
         .today-meal-info { flex: 1; }
         .remove-btn { background: none; color: #ff0000; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
         
-        /* Fix for sticky button states on mobile */
         .duplicate-btn, .decrement-btn { 
             background: #fff; 
             color: #000; 
@@ -45,13 +44,12 @@
             padding: 5px 10px; 
             cursor: pointer; 
             font-size: 12px;
-            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-            -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
         }
         
         /* Remove focus outline */
+        button:focus,
         .duplicate-btn:focus,
         .decrement-btn:focus,
         .remove-btn:focus,
@@ -77,8 +75,7 @@
         
         .empty { color: #999; font-style: italic; padding: 20px 0; }
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 15px 0; }
-        .nav button { background: none; color: #666; border: none; padding: 8px 10px; font-size: 14px; -webkit-tap-highlight-color: transparent; position: relative; transition: color 0.2s ease; }
-        .nav button:focus { outline: none; }
+        .nav button { background: none; color: #666; border: none; padding: 8px 10px; font-size: 14px; position: relative; transition: color 0.2s ease; }
         .nav button::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%) scaleX(0); width: 30px; height: 2px; background: #000; transition: transform 0.2s ease; }
         .nav button.active { color: #000; font-weight: 500; }
         .nav button.active::after { transform: translateX(-50%) scaleX(1); }
@@ -89,8 +86,6 @@
         .modal-title { font-size: 18px; font-weight: normal; }
         .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; color: #000; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .portion-input { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
-        .portion-input input { width: 80px; margin: 0; }
         .scan-btn { background: #000; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px; }
         #scanner-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 200; display: none; }
         #scanner-container.active { display: block; }
@@ -264,23 +259,6 @@
             </form>
         </div>
     </div>
-    <div class="modal" id="portionModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add to Today</h3>
-                <button class="close-btn" onclick="closePortionModal()">×</button>
-            </div>
-           
-            <div id="selectedMealInfo" style="padding: 10px; background: #f5f5f5; margin-bottom: 15px;"></div>
-           
-            <div class="portion-input">
-                <input type="number" id="portionAmount" value="1" min="0.1" step="0.1">
-                <span>servings</span>
-            </div>
-           
-            <button onclick="confirmAddMeal()">Add</button>
-        </div>
-    </div>
     <div class="modal" id="barcodeModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -307,13 +285,13 @@
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <script>
         function escapeHTML(str) {
-  return String(str || '').replace(/[&<>"'`=\/]/g, function (s) {
-    return ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-      '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
-    })[s];
-  });
-}
+            return String(str || '').replace(/[&<>"'`=\/]/g, function (s) {
+                return ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+                '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
+                })[s];
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', function () {
             // tiny helper to reduce repeated document.getElementById calls
@@ -324,8 +302,6 @@
                 dailyIntake: { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] },
                 mealLibrary: [],
                 currentDate: new Date().toDateString(),
-                selectedMeal: null,
-                editingMealId: null,
                 scannedProduct: null
             };
 
@@ -420,10 +396,13 @@
                 const original = appState.mealLibrary.find(m => m.id === meal.id) || { calories: meal.calories / (meal.portions||1), protein: meal.protein/(meal.portions||1), carbs: meal.carbs/(meal.portions||1), fat: meal.fat/(meal.portions||1) };
                 const newPortions = (meal.portions || 1) + delta;
                 if (newPortions < 0.1) { // allow for smaller portions, but remove if near zero
-                    // remove
-                    appState.dailyIntake.calories -= meal.calories; appState.dailyIntake.protein -= meal.protein; appState.dailyIntake.carbs -= meal.carbs; appState.dailyIntake.fat -= meal.fat; appState.dailyIntake.meals.splice(index,1);
+                    appState.dailyIntake.calories -= meal.calories;
+                    appState.dailyIntake.protein -= meal.protein;
+                    appState.dailyIntake.carbs -= meal.carbs;
+                    appState.dailyIntake.fat -= meal.fat;
+                    appState.dailyIntake.meals.splice(index,1);
+                    renderMealLibrary(); // Update meal library counter
                 } else {
-                    // adjust totals by delta using original per-portion values
                     appState.dailyIntake.calories += original.calories * delta;
                     appState.dailyIntake.protein += original.protein * delta;
                     appState.dailyIntake.carbs += original.carbs * delta;
@@ -434,7 +413,9 @@
                     meal.carbs = original.carbs * newPortions;
                     meal.fat = original.fat * newPortions;
                 }
-                saveState(); updateProgress(); renderTodaysMeals();
+                saveState();
+                updateProgress();
+                renderTodaysMeals();
             }
             function duplicateMeal(index){ adjustMealPortions(index, +1); }
             function decrementMeal(index){ adjustMealPortions(index, -1); }
@@ -457,10 +438,14 @@
                 if (buttonElement) buttonElement.classList.add('active'); else document.querySelector(`.nav button[data-section="${section}"]`).classList.add('active');
             }
 
-            window.openAddMealModal = function() { $('mealForm').reset(); $('mealModal').classList.add('active'); appState.editingMealId = null; }
-            window.closeMealModal = function() { $('mealModal').classList.remove('active'); $('mealForm').reset(); appState.editingMealId = null; }
-            window.openPortionModal = function(mealId) { const meal = appState.mealLibrary.find(m => m.id === mealId); if (!meal) return; appState.selectedMeal = meal; $('selectedMealInfo').innerHTML = `<strong>${escapeHTML(meal.name)}</strong><br>Per ${escapeHTML(meal.servingSize)}: ${meal.calories}cal • P:${meal.protein}g • C:${meal.carbs}g • F:${meal.fat}g`; $('portionAmount').value = 1; $('portionModal').classList.add('active'); }
-            window.closePortionModal = function() { $('portionModal').classList.remove('active'); appState.selectedMeal = null; }
+            window.openAddMealModal = function() { 
+                $('mealForm').reset(); 
+                $('mealModal').classList.add('active'); 
+            }
+            window.closeMealModal = function() { 
+                $('mealModal').classList.remove('active'); 
+                $('mealForm').reset(); 
+            }
             
             window.addMealFromLibrary = function(mealId, buttonElement) {
                 const mealFromLibrary = appState.mealLibrary.find(m => m.id === mealId);
@@ -502,64 +487,26 @@
                     }, 800);
                 }
             }
-            
-            window.confirmAddMeal = function() {
-                if (!appState.selectedMeal) return;
-                const portions = parseFloat($('portionAmount').value) || 1;
-                
-                const existingMeal = appState.dailyIntake.meals.find(meal => meal.id === appState.selectedMeal.id);
 
-                if (existingMeal) {
-                    // Update existing meal
-                    const addedCalories = appState.selectedMeal.calories * portions;
-                    const addedProtein = appState.selectedMeal.protein * portions;
-                    const addedCarbs = appState.selectedMeal.carbs * portions;
-                    const addedFat = appState.selectedMeal.fat * portions;
-
-                    existingMeal.portions += portions;
-                    existingMeal.calories += addedCalories;
-                    existingMeal.protein += addedProtein;
-                    existingMeal.carbs += addedCarbs;
-                    existingMeal.fat += addedFat;
-
-                    appState.dailyIntake.calories += addedCalories;
-                    appState.dailyIntake.protein += addedProtein;
-                    appState.dailyIntake.carbs += addedCarbs;
-                    appState.dailyIntake.fat += addedFat;
-                } else {
-                    // Add new meal
-                    const mealToAdd = {
-                        ...appState.selectedMeal,
-                        portions,
-                        calories: appState.selectedMeal.calories * portions,
-                        protein: appState.selectedMeal.protein * portions,
-                        carbs: appState.selectedMeal.carbs * portions,
-                        fat: appState.selectedMeal.fat * portions
-                    };
-                    appState.dailyIntake.meals.push(mealToAdd);
-                    appState.dailyIntake.calories += mealToAdd.calories;
-                    appState.dailyIntake.protein += mealToAdd.protein;
-                    appState.dailyIntake.carbs += mealToAdd.carbs;
-                    appState.dailyIntake.fat += mealToAdd.fat;
-                }
-
-                saveState();
-                updateProgress();
-                renderTodaysMeals();
-                window.closePortionModal();
-                window.showSection('progress', document.querySelector('.nav button[data-section="progress"]'));
-            }
-
-            window.removeTodayMeal = function(index) { const meal = appState.dailyIntake.meals[index]; if(!meal) return; appState.dailyIntake.calories -= meal.calories; appState.dailyIntake.protein -= meal.protein; appState.dailyIntake.carbs -= meal.carbs; appState.dailyIntake.fat -= meal.fat; appState.dailyIntake.meals.splice(index, 1); saveState(); updateProgress(); renderTodaysMeals(); }
+            window.removeTodayMeal = function(index) { const meal = appState.dailyIntake.meals[index]; if(!meal) return; appState.dailyIntake.calories -= meal.calories; appState.dailyIntake.protein -= meal.protein; appState.dailyIntake.carbs -= meal.carbs; appState.dailyIntake.fat -= meal.fat; appState.dailyIntake.meals.splice(index, 1); saveState(); updateProgress(); renderTodaysMeals(); renderMealLibrary(); }
             window.deleteMeal = function(mealId) { if (confirm('Delete this meal?')) { appState.mealLibrary = appState.mealLibrary.filter(m => m.id !== mealId); saveState(); renderMealLibrary(); } }
             window.resetDailyIntake = function() { if (confirm('Reset today?')) { appState.dailyIntake = { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] }; saveState(); updateProgress(); renderTodaysMeals(); renderMealLibrary(); } }
 
-            // Barcode / scanner / import/export code kept identical to original (no functional changes)
+            // Barcode / scanner / import/export code
             window.startBarcodeScanner = function() { const scannerContainer = $('scanner-container'); scannerContainer.classList.add('active'); Quagga.init({ inputStream: { name: "Live", type: "LiveStream", target: document.querySelector('#scanner-video'), constraints: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" } }, decoder: { readers: [ "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader" ] }, locate: true }, function(err) { if (err) { console.error(err); $('scannerStatus').textContent = 'Camera access denied'; setTimeout(() => window.stopBarcodeScanner(), 2000); return; } Quagga.start(); }); Quagga.onDetected(function(result) { const code = result.codeResult.code; Quagga.stop(); $('scanner-container').classList.remove('active'); fetchProductData(code); }); }
             window.stopBarcodeScanner = function() { Quagga.stop(); $('scanner-container').classList.remove('active'); }
             window.closeBarcodeModal = function() { $('barcodeModal').classList.remove('active'); appState.scannedProduct = null; }
             window.addScannedProduct = function() { if (!appState.scannedProduct) return; const meal = { id: Date.now(), ...appState.scannedProduct }; appState.mealLibrary.unshift(meal); saveState(); renderMealLibrary(); window.closeBarcodeModal(); alert('Product added to meal library!'); }
-            window.addScannedProductAndUse = function() { if (!appState.scannedProduct) return; const meal = { id: Date.now(), ...appState.scannedProduct }; appState.mealLibrary.unshift(meal); saveState(); renderMealLibrary(); window.closeBarcodeModal(); setTimeout(() => window.openPortionModal(meal.id), 100); }
+            
+            window.addScannedProductAndUse = function() {
+                if (!appState.scannedProduct) return;
+                const meal = { id: Date.now(), ...appState.scannedProduct };
+                appState.mealLibrary.unshift(meal);
+                saveState();
+                renderMealLibrary();
+                window.closeBarcodeModal();
+                addMealFromLibrary(meal.id, null);
+            }
 
             async function fetchProductData(barcode) { const barcodeModal = $('barcodeModal'); const barcodeResult = $('barcodeResult'); barcodeModal.classList.add('active'); barcodeResult.innerHTML = '<p>Fetching product information...<span class="loading"></span></p>'; try { const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`); const data = await response.json(); if (data.status === 1 && data.product) { displayProductData(data.product); } else { barcodeResult.innerHTML = `<p style="color: #666;">Product not found in database.</p><p style="margin-top: 10px;">You can add it manually using the form.</p><button onclick="closeBarcodeModal(); openAddMealModal();" style="margin-top: 15px;">Add Manually</button>`; } } catch (error) { console.error('Error fetching product:', error); barcodeResult.innerHTML = `<p style="color: #ff0000;">Error fetching product data.</p><p style="margin-top: 10px;">Please try again or add manually.</p><button onclick="closeBarcodeModal(); openAddMealModal();" style="margin-top: 15px;">Add Manually</button>`; } }
             function displayProductData(product) { const barcodeResult = $('barcodeResult'); const nutrients = product.nutriments || {}; const servingSize = product.serving_size || '100g'; const calories = nutrients['energy-kcal_serving'] || nutrients['energy-kcal_100g'] || 0; const protein = nutrients.proteins_serving || nutrients.proteins_100g || 0; const carbs = nutrients.carbohydrates_serving || nutrients.carbohydrates_100g || 0; const fat = nutrients.fat_serving || nutrients.fat_100g || 0; const productName = product.product_name || 'Unknown Product'; const brand = product.brands || ''; appState.scannedProduct = { name: brand ? `${productName} (${brand})` : productName, calories: Math.round(calories), protein: parseFloat(protein.toFixed(1)), carbs: parseFloat(carbs.toFixed(1)), fat: parseFloat(fat.toFixed(1)), servingSize: servingSize }; barcodeResult.innerHTML = `
@@ -577,7 +524,22 @@
                     </div>
                     <p style="font-size: 12px; color: #666; margin-top: 15px;">Data from Open Food Facts. You can edit these values after adding.</p>`; }
 
-            document.getElementById('mealForm').addEventListener('submit', (e) => { e.preventDefault(); const meal = { id: appState.editingMealId || Date.now(), name: $('mealName').value, calories: parseFloat($('mealCalories').value), protein: parseFloat($('mealProtein').value), carbs: parseFloat($('mealCarbs').value), fat: parseFloat($('mealFat').value), servingSize: $('servingSize').value || '1 serving' }; if (appState.editingMealId) { const index = appState.mealLibrary.findIndex(m => m.id === appState.editingMealId); if (index !== -1) appState.mealLibrary[index] = meal; } else appState.mealLibrary.push(meal); saveState(); renderMealLibrary(); closeMealModal(); });
+            document.getElementById('mealForm').addEventListener('submit', (e) => { 
+                e.preventDefault(); 
+                const meal = { 
+                    id: Date.now(), 
+                    name: $('mealName').value, 
+                    calories: parseFloat($('mealCalories').value), 
+                    protein: parseFloat($('mealProtein').value), 
+                    carbs: parseFloat($('mealCarbs').value), 
+                    fat: parseFloat($('mealFat').value), 
+                    servingSize: $('servingSize').value || '1 serving' 
+                }; 
+                appState.mealLibrary.push(meal); 
+                saveState(); 
+                renderMealLibrary(); 
+                closeMealModal(); 
+            });
 
             document.getElementById('targetsForm').addEventListener('submit', (e) => { e.preventDefault(); appState.targets = { calories: parseInt($('targetCalories').value), protein: parseInt($('targetProtein').value), carbs: parseInt($('targetCarbs').value), fat: parseInt($('targetFat').value) }; saveState(); updateProgress(); const btn = e.target.querySelector('button'); const originalText = btn.textContent; btn.textContent = 'Saved'; setTimeout(() => { btn.textContent = originalText; }, 1500); });
 
@@ -592,3 +554,4 @@
     </script>
 </body>
 </html>
+
