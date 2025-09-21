@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>NutriTrack</title>
@@ -32,7 +32,7 @@
         .meal-actions { display: flex; gap: 10px; }
         .meal-actions button { padding: 5px 10px; font-size: 12px; transition: all 0.2s ease-in-out; }
         .added { background: #28a745; color: #fff; transform: scale(1.05); }
-        .meal-count { color: #132c47; font-weight: 500; margin-left: 2px; font-size: 13px; }
+        .meal-count { color: #3d3d3d; font-weight: 500; margin-left: 2px; font-size: 13px; }
         .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
         .today-meal-info { flex: 1; }
         .remove-btn { background: none; color: #ff0000; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
@@ -63,6 +63,9 @@
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); z-index: 100; padding: 20px; overflow-y: auto; }
         .modal.active { display: block; }
         .modal-content { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border: 1px solid #000; }
+        .confirm-modal .modal-content { max-width: 350px; margin: 50vh auto 0; transform: translateY(-50%); text-align: center; }
+        .confirm-message { margin-bottom: 20px; font-size: 16px; line-height: 1.4; }
+        .confirm-actions { display: flex; gap: 10px; justify-content: center; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-size: 18px; font-weight: normal; }
         .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; color: #000; }
@@ -233,6 +236,15 @@
             </div>
            
             <div id="barcodeResult"></div>
+        </div>
+    </div>
+    <div class="modal confirm-modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="confirm-message" id="confirmMessage"></div>
+            <div class="confirm-actions">
+                <button class="secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button id="confirmButton">Confirm</button>
+            </div>
         </div>
     </div>
     <div id="scanner-container">
@@ -470,8 +482,24 @@
             }
 
             window.removeTodayMeal = function(index) { const meal = appState.dailyIntake.meals[index]; if(!meal) return; appState.dailyIntake.calories -= meal.calories; appState.dailyIntake.protein -= meal.protein; appState.dailyIntake.carbs -= meal.carbs; appState.dailyIntake.fat -= meal.fat; appState.dailyIntake.meals.splice(index, 1); saveState(); updateProgress(); renderTodaysMeals(); renderMealLibrary(); }
-            window.deleteMeal = function(mealId) { if (confirm('Delete this meal?')) { appState.mealLibrary = appState.mealLibrary.filter(m => m.id !== mealId); saveState(); renderMealLibrary(); } }
-            window.resetDailyIntake = function() { if (confirm('Reset today?')) { appState.dailyIntake = { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] }; saveState(); updateProgress(); renderTodaysMeals(); renderMealLibrary(); } }
+            // Custom confirm modal functions
+            let confirmCallback = null;
+            window.showConfirm = function(message, callback) {
+                $('confirmMessage').textContent = message;
+                confirmCallback = callback;
+                $('confirmModal').classList.add('active');
+            }
+            window.closeConfirmModal = function() {
+                $('confirmModal').classList.remove('active');
+                confirmCallback = null;
+            }
+            $('confirmButton').addEventListener('click', function() {
+                if (confirmCallback) confirmCallback();
+                closeConfirmModal();
+            });
+
+            window.deleteMeal = function(mealId) { showConfirm('Delete this meal?', () => { appState.mealLibrary = appState.mealLibrary.filter(m => m.id !== mealId); saveState(); renderMealLibrary(); }); }
+            window.resetDailyIntake = function() { showConfirm('Reset today\'s intake?', () => { appState.dailyIntake = { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] }; saveState(); updateProgress(); renderTodaysMeals(); renderMealLibrary(); }); }
 
             // Barcode / scanner / import/export code
             window.startBarcodeScanner = function() { const scannerContainer = $('scanner-container'); scannerContainer.classList.add('active'); Quagga.init({ inputStream: { name: "Live", type: "LiveStream", target: document.querySelector('#scanner-video'), constraints: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" } }, decoder: { readers: [ "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader" ] }, locate: true }, function(err) { if (err) { console.error(err); $('scannerStatus').textContent = 'Camera access denied'; setTimeout(() => window.stopBarcodeScanner(), 2000); return; } Quagga.start(); }); Quagga.onDetected(function(result) { const code = result.codeResult.code; Quagga.stop(); $('scanner-container').classList.remove('active'); fetchProductData(code); }); }
@@ -528,7 +556,7 @@
 
             window.copyDataToClipboard = function () { const dataStr = JSON.stringify(appState, null, 2); if (navigator.clipboard) navigator.clipboard.writeText(dataStr).then(() => alert('Data copied to clipboard! Save it in Notes app for backup.')).catch(() => { const textarea = document.createElement('textarea'); textarea.value = dataStr; document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea); alert('Data copied to clipboard!'); }); else { const textarea = document.createElement('textarea'); textarea.value = dataStr; document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea); alert('Data copied to clipboard!'); } }
 
-            window.importFromPaste = function () { const pasteData = $('pasteData').value.trim(); if (!pasteData) return alert('Please paste data first'); try { const imported = JSON.parse(pasteData); if (confirm('Replace all existing data with imported data?')) { appState.mealLibrary = imported.mealLibrary || []; appState.targets = imported.targets || {}; saveState(); loadTargetInputs(); renderMealLibrary(); updateProgress(); alert('Data replaced successfully!'); $('pasteData').value = ''; } } catch (err) { alert('Invalid data format. Please check and try again.'); console.error(err); } }
+            window.importFromPaste = function () { const pasteData = $('pasteData').value.trim(); if (!pasteData) return alert('Please paste data first'); try { const imported = JSON.parse(pasteData); showConfirm('Replace all existing data with imported data?', () => { appState.mealLibrary = imported.mealLibrary || []; appState.targets = imported.targets || {}; saveState(); loadTargetInputs(); renderMealLibrary(); updateProgress(); alert('Data replaced successfully!'); $('pasteData').value = ''; }); } catch (err) { alert('Invalid data format. Please check and try again.'); console.error(err); } }
 
             document.querySelectorAll('.nav button').forEach(button => { button.addEventListener('click', function () { const section = this.getAttribute('data-section'); window.showSection(section, this); }); });
         });
