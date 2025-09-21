@@ -350,6 +350,20 @@
                     const todaysMeal = appState.dailyIntake.meals.find(m => m.id === meal.id);
                     const count = todaysMeal ? todaysMeal.portions : 0;
                     const countDisplay = count > 0 ? `<span class="meal-count">(${count.toFixed(1).replace(/\.0$/, '')}x)</span>` : '';
+                    
+                    // Create button HTML based on count
+                    let buttonsHTML = '';
+                    if (count > 0) {
+                        buttonsHTML = `
+                            <button class="decrement-btn" onclick="decrementMealFromLibrary(${meal.id})">-</button>
+                            <button class="duplicate-btn" onclick="incrementMealFromLibrary(${meal.id})">+</button>
+                        `;
+                    } else {
+                        buttonsHTML = `
+                            <button class="duplicate-btn" onclick="incrementMealFromLibrary(${meal.id})">+</button>
+                        `;
+                    }
+                    
                     return `
                     <div class="meal-item" data-id="${meal.id}">
                         <div class="meal-info">
@@ -357,11 +371,20 @@
                             <div class="meal-macros">${meal.calories}cal • P:${meal.protein}g • C:${meal.carbs}g • F:${meal.fat}g • ${escapeHTML(meal.servingSize)}</div>
                         </div>
                         <div class="meal-actions">
-                            <button onclick="addMealFromLibrary(${meal.id}, this)">Add</button>
+                            ${buttonsHTML}
                             <button class="secondary" onclick="deleteMeal(${meal.id})">Del</button>
                         </div>
                     </div>`;
                 }).join('');
+                
+                // Add blur after a short delay to remove focus from buttons
+                setTimeout(() => {
+                    document.querySelectorAll('.decrement-btn, .duplicate-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            setTimeout(() => this.blur(), 50);
+                        });
+                    });
+                }, 0);
             }
 
             function renderTodaysMeals() {
@@ -417,9 +440,74 @@
                 updateProgress();
                 renderTodaysMeals();
             }
+            
+            // New functions for meal library increment/decrement
+            function adjustMealFromLibrary(mealId, delta) {
+                const mealFromLibrary = appState.mealLibrary.find(m => m.id === mealId);
+                if (!mealFromLibrary) return;
+                
+                const existingMeal = appState.dailyIntake.meals.find(meal => meal.id === mealId);
+                
+                if (existingMeal) {
+                    const newPortions = (existingMeal.portions || 1) + delta;
+                    if (newPortions < 0.1) {
+                        // Remove meal entirely
+                        appState.dailyIntake.calories -= existingMeal.calories;
+                        appState.dailyIntake.protein -= existingMeal.protein;
+                        appState.dailyIntake.carbs -= existingMeal.carbs;
+                        appState.dailyIntake.fat -= existingMeal.fat;
+                        
+                        const mealIndex = appState.dailyIntake.meals.findIndex(meal => meal.id === mealId);
+                        if (mealIndex !== -1) {
+                            appState.dailyIntake.meals.splice(mealIndex, 1);
+                        }
+                    } else {
+                        // Adjust portions
+                        appState.dailyIntake.calories += mealFromLibrary.calories * delta;
+                        appState.dailyIntake.protein += mealFromLibrary.protein * delta;
+                        appState.dailyIntake.carbs += mealFromLibrary.carbs * delta;
+                        appState.dailyIntake.fat += mealFromLibrary.fat * delta;
+                        
+                        existingMeal.portions = newPortions;
+                        existingMeal.calories = mealFromLibrary.calories * newPortions;
+                        existingMeal.protein = mealFromLibrary.protein * newPortions;
+                        existingMeal.carbs = mealFromLibrary.carbs * newPortions;
+                        existingMeal.fat = mealFromLibrary.fat * newPortions;
+                    }
+                } else if (delta > 0) {
+                    // Add new meal
+                    const portions = delta;
+                    const newDailyMeal = { 
+                        ...mealFromLibrary, 
+                        portions: portions, 
+                        calories: mealFromLibrary.calories * portions, 
+                        protein: mealFromLibrary.protein * portions, 
+                        carbs: mealFromLibrary.carbs * portions, 
+                        fat: mealFromLibrary.fat * portions 
+                    };
+                    appState.dailyIntake.meals.push(newDailyMeal);
+                    
+                    appState.dailyIntake.calories += mealFromLibrary.calories * portions;
+                    appState.dailyIntake.protein += mealFromLibrary.protein * portions;
+                    appState.dailyIntake.carbs += mealFromLibrary.carbs * portions;
+                    appState.dailyIntake.fat += mealFromLibrary.fat * portions;
+                }
+                
+                saveState();
+                updateProgress();
+                renderTodaysMeals();
+                renderMealLibrary(); // Update library to show new counts
+            }
+            
             function duplicateMeal(index){ adjustMealPortions(index, +1); }
             function decrementMeal(index){ adjustMealPortions(index, -1); }
-            window.duplicateMeal = duplicateMeal; window.decrementMeal = decrementMeal;
+            function incrementMealFromLibrary(mealId){ adjustMealFromLibrary(mealId, +1); }
+            function decrementMealFromLibrary(mealId){ adjustMealFromLibrary(mealId, -1); }
+            
+            window.duplicateMeal = duplicateMeal; 
+            window.decrementMeal = decrementMeal;
+            window.incrementMealFromLibrary = incrementMealFromLibrary;
+            window.decrementMealFromLibrary = decrementMealFromLibrary;
 
             function filterMeals() { renderMealLibrary(); }
             function loadTargetInputs() { $('targetCalories').value = appState.targets.calories; $('targetProtein').value = appState.targets.protein; $('targetCarbs').value = appState.targets.carbs; $('targetFat').value = appState.targets.fat; }
@@ -447,33 +535,9 @@
                 $('mealForm').reset(); 
             }
             
+            // Keep the old function for backward compatibility with scanned products
             window.addMealFromLibrary = function(mealId, buttonElement) {
-                const mealFromLibrary = appState.mealLibrary.find(m => m.id === mealId);
-                if (!mealFromLibrary) return;
-                
-                const portions = 1; // Add one serving at a time from library
-                const existingMeal = appState.dailyIntake.meals.find(meal => meal.id === mealId);
-
-                if (existingMeal) {
-                    existingMeal.portions += portions;
-                    existingMeal.calories += mealFromLibrary.calories * portions;
-                    existingMeal.protein += mealFromLibrary.protein * portions;
-                    existingMeal.carbs += mealFromLibrary.carbs * portions;
-                    existingMeal.fat += mealFromLibrary.fat * portions;
-                } else {
-                    const newDailyMeal = { ...mealFromLibrary, portions: portions, calories: mealFromLibrary.calories * portions, protein: mealFromLibrary.protein * portions, carbs: mealFromLibrary.carbs * portions, fat: mealFromLibrary.fat * portions };
-                    appState.dailyIntake.meals.push(newDailyMeal);
-                }
-                
-                appState.dailyIntake.calories += mealFromLibrary.calories * portions;
-                appState.dailyIntake.protein += mealFromLibrary.protein * portions;
-                appState.dailyIntake.carbs += mealFromLibrary.carbs * portions;
-                appState.dailyIntake.fat += mealFromLibrary.fat * portions;
-                
-                saveState();
-                updateProgress();
-                renderTodaysMeals();
-                renderMealLibrary(); // Re-render to update count
+                incrementMealFromLibrary(mealId);
                 
                 if (buttonElement) {
                     const originalText = "Add";
@@ -505,7 +569,7 @@
                 saveState();
                 renderMealLibrary();
                 window.closeBarcodeModal();
-                addMealFromLibrary(meal.id, null);
+                incrementMealFromLibrary(meal.id);
             }
 
             async function fetchProductData(barcode) { const barcodeModal = $('barcodeModal'); const barcodeResult = $('barcodeResult'); barcodeModal.classList.add('active'); barcodeResult.innerHTML = '<p>Fetching product information...<span class="loading"></span></p>'; try { const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`); const data = await response.json(); if (data.status === 1 && data.product) { displayProductData(data.product); } else { barcodeResult.innerHTML = `<p style="color: #666;">Product not found in database.</p><p style="margin-top: 10px;">You can add it manually using the form.</p><button onclick="closeBarcodeModal(); openAddMealModal();" style="margin-top: 15px;">Add Manually</button>`; } } catch (error) { console.error('Error fetching product:', error); barcodeResult.innerHTML = `<p style="color: #ff0000;">Error fetching product data.</p><p style="margin-top: 10px;">Please try again or add manually.</p><button onclick="closeBarcodeModal(); openAddMealModal();" style="margin-top: 15px;">Add Manually</button>`; } }
@@ -554,4 +618,3 @@
     </script>
 </body>
 </html>
-
