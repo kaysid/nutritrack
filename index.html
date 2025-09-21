@@ -14,7 +14,8 @@
         .header h1 { font-size: 24px; font-weight: normal; margin-bottom: 10px; }
         .date-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #666; }
         .reset-btn { font-size: 12px; }
-        .section { margin-bottom: 40px; }
+        .section { margin-bottom: 40px; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .section.active { opacity: 1; transform: translateY(0); }
         .section-title { font-size: 18px; font-weight: normal; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
         .progress-item { margin-bottom: 15px; }
         .progress-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
@@ -25,7 +26,10 @@
         input:focus { outline: none; border-color: #000; }
         button { background: #000; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-size: 14px; -webkit-tap-highlight-color: transparent; }
         button.secondary { background: none; color: #000; border: 1px solid #000; }
-        .meal-item { padding: 10px; border: 1px solid #eee; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .meal-item { padding: 10px; border: 1px solid #eee; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .meal-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .meal-item.flash { animation: flashPulse 0.6s ease; }
+        @keyframes flashPulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); background-color: #f0f8ff; } 100% { transform: scale(1); } }
         .meal-info { flex: 1; }
         .meal-name { font-weight: 500; margin-bottom: 2px; }
         .meal-macros { font-size: 12px; color: #666; }
@@ -33,7 +37,9 @@
         .meal-actions button { padding: 5px 10px; font-size: 12px; transition: all 0.2s ease-in-out; }
         .added { background: #28a745; color: #fff; transform: scale(1.05); }
         .meal-count { color: #3d3d3d; font-weight: 500; margin-left: 2px; font-size: 13px; }
-        .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; transition: transform 0.2s ease; }
+        .today-meal.updated { animation: slideScale 0.4s ease; }
+        @keyframes slideScale { 0% { transform: translateX(-5px) scale(1); } 50% { transform: translateX(0) scale(1.01); } 100% { transform: translateX(0) scale(1); } }
         .today-meal-info { flex: 1; }
         .remove-btn { background: none; color: #ff0000; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
         
@@ -296,7 +302,18 @@
                 { id: Date.now() + 10, name: "Salmon", calories: 208, protein: 22, carbs: 0, fat: 13, servingSize: "100g" }
             ];
 
-            function init() { loadState(); checkDateReset(); updateDate(); updateProgress(); renderMealLibrary(); renderTodaysMeals(); loadTargetInputs(); window.showSection('progress', document.querySelector('.nav button[data-section="progress"]')); }
+            function init() { 
+                loadState(); 
+                checkDateReset(); 
+                updateDate(); 
+                updateProgress(); 
+                renderMealLibrary(); 
+                renderTodaysMeals(); 
+                loadTargetInputs(); 
+                window.showSection('progress', document.querySelector('.nav button[data-section="progress"]')); 
+                // Ensure initial section is visible
+                setTimeout(() => $('progressSection').classList.add('active'), 50);
+            }
             function loadState() { const saved = localStorage.getItem('nutritionAppState'); if (saved) { appState = { ...appState, ...JSON.parse(saved) }; } else { appState.mealLibrary = defaultMeals; saveState(); } }
             function saveState() { localStorage.setItem('nutritionAppState', JSON.stringify(appState)); }
             function checkDateReset() { const today = new Date().toDateString(); if (appState.currentDate !== today) { appState.currentDate = today; appState.dailyIntake = { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] }; saveState(); } }
@@ -422,6 +439,13 @@
                     appState.dailyIntake.fat += mealFromLibrary.fat * portions;
                 }
                 
+                // Add flash animation to the meal item
+                const mealItem = document.querySelector(`[data-id="${mealId}"]`);
+                if (mealItem) {
+                    mealItem.classList.add('flash');
+                    setTimeout(() => mealItem.classList.remove('flash'), 600);
+                }
+                
                 saveState();
                 updateProgress();
                 renderTodaysMeals();
@@ -442,14 +466,20 @@
             function loadTargetInputs() { $('targetCalories').value = appState.targets.calories; $('targetProtein').value = appState.targets.protein; $('targetCarbs').value = appState.targets.carbs; $('targetFat').value = appState.targets.fat; }
 
             window.showSection = function (section, buttonElement) {
+                // Remove active class from all sections
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
                 $('progressSection').style.display = 'none'; $('mealsSection').style.display = 'none'; $('settingsSection').style.display = 'none';
+                
                 if (section === 'progress') {
                     $('progressSection').style.display = 'block';
+                    setTimeout(() => $('progressSection').classList.add('active'), 10);
                 } else if (section === 'meals') {
                     $('mealsSection').style.display = 'block';
+                    setTimeout(() => $('mealsSection').classList.add('active'), 10);
                     renderMealLibrary(); // Refresh meal library counts
                 } else if (section === 'settings') {
                     $('settingsSection').style.display = 'block';
+                    setTimeout(() => $('settingsSection').classList.add('active'), 10);
                 }
                 document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
                 if (buttonElement) buttonElement.classList.add('active'); else document.querySelector(`.nav button[data-section="${section}"]`).classList.add('active');
