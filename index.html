@@ -13,7 +13,7 @@
         .header { margin-bottom: 30px; }
         .header h1 { font-size: 24px; font-weight: normal; margin-bottom: 10px; }
         .date-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #666; }
-        .reset-btn { background: none; border: 1px solid #000; padding: 5px 10px; cursor: pointer; font-size: 12px; color: #000; }
+        .reset-btn { font-size: 12px; }
         .section { margin-bottom: 40px; }
         .section-title { font-size: 18px; font-weight: normal; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
         .progress-item { margin-bottom: 15px; }
@@ -31,13 +31,13 @@
         .meal-macros { font-size: 12px; color: #666; }
         .meal-actions { display: flex; gap: 10px; }
         .meal-actions button { padding: 5px 10px; font-size: 12px; transition: all 0.2s ease-in-out; }
-        .meal-actions button.added { background: #28a745; color: #fff; transform: scale(1.05); }
-        .meal-count { color: #007bff; font-weight: 500; margin-left: 8px; font-size: 13px; }
+        .added { background: #28a745; color: #fff; transform: scale(1.05); }
+        .meal-count { color: #3d3d3d; font-weight: 500; margin-left: 2px; font-size: 13px; }
         .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
         .today-meal-info { flex: 1; }
         .remove-btn { background: none; color: #ff0000; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
         
-        .duplicate-btn, .decrement-btn { 
+        .duplicate-btn, .decrement-btn, .reset-btn { 
             background: #fff; 
             color: #000; 
             border: 1px solid #000; 
@@ -48,30 +48,10 @@
             user-select: none;
         }
         
-        /* Remove focus outline */
-        button:focus,
-        .duplicate-btn:focus,
-        .decrement-btn:focus,
-        .remove-btn:focus,
-        .reset-btn:focus {
-            outline: none;
-        }
+        button:focus, .remove-btn:focus { outline: none; }
+        .duplicate-btn:active, .decrement-btn:active, .reset-btn:active { background: #000; color: #fff; }
         
-        /* Active state for visual feedback */
-        .duplicate-btn:active,
-        .decrement-btn:active {
-            background: #000;
-            color: #fff;
-        }
-        
-        .reset-btn:active {
-            background: #000;
-            color: #fff;
-        }
-        
-        .remove-btn:active {
-            opacity: 0.5;
-        }
+        .remove-btn:active { opacity: 0.5; }
         
         .empty { color: #999; font-style: italic; padding: 20px 0; }
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 15px 0; }
@@ -102,23 +82,8 @@
         .barcode-nutrition { font-size: 14px; color: #666; margin-bottom: 5px; }
         .barcode-actions { display: flex; gap: 10px; margin-top: 15px; }
         @media (max-width: 480px) { body { padding: 15px; padding-bottom: 60px; } .row { grid-template-columns: 1fr; } }
-        /* small 3px rounding for requested buttons (no other visual changes) */
-        .reset-btn,
-        .decrement-btn,
-        .duplicate-btn,
-        .scan-btn,
-        .scanner-close,
-        .scanner-target,
-        .meal-actions button,
-        #mealForm button[type="submit"],
-        #targetsForm button[type="submit"],
-        .button-copy-import,
-        .barcode-actions button,
-        button[onclick^="copyDataToClipboard"],
-        button[onclick="openAddMealModal()"],
-        button[onclick^="importFromPaste"] {
-          border-radius: 3px;
-        }
+        /* 3px border radius for buttons */
+        .reset-btn, .decrement-btn, .duplicate-btn, .scan-btn, .scanner-close, .scanner-target, .meal-actions button, #mealForm button[type="submit"], #targetsForm button[type="submit"], .barcode-actions button, button[onclick^="copyDataToClipboard"], button[onclick="openAddMealModal()"], button[onclick^="importFromPaste"] { border-radius: 3px; }
 
     </style>
 </head>
@@ -342,75 +307,26 @@
             }
 
             function renderMealLibrary() {
-                const mealList = $('mealList');
-                const searchTerm = $('mealSearch').value.toLowerCase();
+                const mealList = $('mealList'), searchTerm = $('mealSearch').value.toLowerCase();
                 const filtered = appState.mealLibrary.filter(m => m.name.toLowerCase().includes(searchTerm));
-                if (filtered.length === 0) { mealList.innerHTML = '<div class="empty">No meals found</div>'; return; }
+                if (!filtered.length) { mealList.innerHTML = '<div class="empty">No meals found</div>'; return; }
                 mealList.innerHTML = filtered.map(meal => {
                     const todaysMeal = appState.dailyIntake.meals.find(m => m.id === meal.id);
                     const count = todaysMeal ? todaysMeal.portions : 0;
                     const countDisplay = count > 0 ? `<span class="meal-count">(${count.toFixed(1).replace(/\.0$/, '')}x)</span>` : '';
-                    
-                    // Create button HTML based on count
-                    let buttonsHTML = '';
-                    if (count > 0) {
-                        buttonsHTML = `
-                            <button class="decrement-btn" onclick="decrementMealFromLibrary(${meal.id})">-</button>
-                            <button class="duplicate-btn" onclick="incrementMealFromLibrary(${meal.id})">+</button>
-                        `;
-                    } else {
-                        buttonsHTML = `
-                            <button class="duplicate-btn" onclick="incrementMealFromLibrary(${meal.id})">+</button>
-                        `;
-                    }
-                    
-                    return `
-                    <div class="meal-item" data-id="${meal.id}">
-                        <div class="meal-info">
-                            <div class="meal-name">${escapeHTML(meal.name)} ${countDisplay}</div>
-                            <div class="meal-macros">${meal.calories}cal • P:${meal.protein}g • C:${meal.carbs}g • F:${meal.fat}g • ${escapeHTML(meal.servingSize)}</div>
-                        </div>
-                        <div class="meal-actions">
-                            ${buttonsHTML}
-                            <button class="secondary" onclick="deleteMeal(${meal.id})">Del</button>
-                        </div>
-                    </div>`;
+                    const buttonsHTML = count > 0 ? 
+                        `<button class="decrement-btn" onclick="decrementMealFromLibrary(${meal.id})">-</button><button class="duplicate-btn" onclick="incrementMealFromLibrary(${meal.id})">+</button>` :
+                        `<button class="duplicate-btn" onclick="incrementMealFromLibrary(${meal.id})">+</button>`;
+                    return `<div class="meal-item" data-id="${meal.id}"><div class="meal-info"><div class="meal-name">${escapeHTML(meal.name)} ${countDisplay}</div><div class="meal-macros">${meal.calories}cal • P:${meal.protein}g • C:${meal.carbs}g • F:${meal.fat}g • ${escapeHTML(meal.servingSize)}</div></div><div class="meal-actions">${buttonsHTML}<button class="secondary" onclick="deleteMeal(${meal.id})">Del</button></div></div>`;
                 }).join('');
-                
-                // Add blur after a short delay to remove focus from buttons
-                setTimeout(() => {
-                    document.querySelectorAll('.decrement-btn, .duplicate-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            setTimeout(() => this.blur(), 50);
-                        });
-                    });
-                }, 0);
+                setTimeout(() => document.querySelectorAll('.decrement-btn, .duplicate-btn').forEach(btn => btn.addEventListener('click', function() { setTimeout(() => this.blur(), 50); })), 0);
             }
 
             function renderTodaysMeals() {
                 const todayList = $('todayMealsList');
-                if (appState.dailyIntake.meals.length === 0) { todayList.innerHTML = '<div class="empty">No meals today</div>'; return; }
-                todayList.innerHTML = appState.dailyIntake.meals.map((meal, index) => `
-                    <div class="today-meal" data-index="${index}">
-                        <div class="today-meal-info">
-                            <div>${escapeHTML(meal.name)} ${meal.portions > 1 ? `(${meal.portions.toFixed(1).replace(/\.0$/, '')}x)` : ''}</div>
-                            <div style="font-size: 12px; color: #666;">${Math.round(meal.calories)}cal • P:${meal.protein.toFixed(1)}g • C:${meal.carbs.toFixed(1)}g • F:${meal.fat.toFixed(1)}g</div>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="decrement-btn" onclick="decrementMeal(${index})">-</button>
-                            <button class="duplicate-btn" onclick="duplicateMeal(${index})">+</button>
-                            <button class="remove-btn" onclick="removeTodayMeal(${index})">Remove</button>
-                        </div>
-                    </div>`).join('');
-                    
-                // Add blur after a short delay to remove focus from buttons
-                setTimeout(() => {
-                    document.querySelectorAll('.decrement-btn, .duplicate-btn, .remove-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            setTimeout(() => this.blur(), 50);
-                        });
-                    });
-                }, 0);
+                if (!appState.dailyIntake.meals.length) { todayList.innerHTML = '<div class="empty">No meals today</div>'; return; }
+                todayList.innerHTML = appState.dailyIntake.meals.map((meal, index) => `<div class="today-meal" data-index="${index}"><div class="today-meal-info"><div>${escapeHTML(meal.name)} ${meal.portions > 1 ? `<span class="meal-count">(${meal.portions.toFixed(1).replace(/\.0$/, '')}x)</span>` : ''}</div><div class="meal-count">${Math.round(meal.calories)}cal • P:${meal.protein.toFixed(1)}g • C:${meal.carbs.toFixed(1)}g • F:${meal.fat.toFixed(1)}g</div></div><div style="display: flex; gap: 10px;"><button class="decrement-btn" onclick="decrementMeal(${index})">-</button><button class="duplicate-btn" onclick="duplicateMeal(${index})">+</button><button class="remove-btn" onclick="removeTodayMeal(${index})">Remove</button></div></div>`).join('');
+                setTimeout(() => document.querySelectorAll('.decrement-btn, .duplicate-btn, .remove-btn').forEach(btn => btn.addEventListener('click', function() { setTimeout(() => this.blur(), 50); })), 0);
             }
 
             // Replace duplicate logic with a single adjust function (preserves names used by HTML)
