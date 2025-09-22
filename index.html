@@ -8,78 +8,87 @@
     <title>NutriTrack</title>
    
     <style>
+        :root {
+            --primary-bg: #fff;
+            --primary-text: #000;
+            --secondary-text: #666;
+            --border-color: #eee;
+            --border-color-light: #ddd;
+            --progress-bg: #f5f5f5;
+            --accent-over: #ff0000;
+            --accent-add: #28a745;
+            --border-radius: 3px;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #000; padding: 20px; padding-bottom: 70px; max-width: 600px; margin: 0 auto; touch-action: manipulation; overflow-y: scroll; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--primary-bg); color: var(--primary-text); padding: 20px 20px 70px; max-width: 600px; margin: 0 auto; touch-action: manipulation; overflow-y: scroll; }
         .header { margin-bottom: 30px; }
         .header h1 { font-size: 24px; font-weight: normal; margin-bottom: 10px; }
-        .date-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #666; }
-        .reset-btn { font-size: 12px; }
+        .date-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--secondary-text); }
         .section { margin-bottom: 40px; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; }
         .section.active { opacity: 1; transform: translateY(0); }
-        .section-title { font-size: 18px; font-weight: normal; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .section-title { font-size: 18px; font-weight: normal; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         .progress-item { margin-bottom: 15px; }
         .progress-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
-        .progress-bar { height: 20px; background: #f5f5f5; position: relative; overflow: hidden; border-radius: 3px; }
-        .progress-fill { height: 100%; background: #000; transition: width 0.3s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; color: #fff; font-size: 11px; border-radius: 3px; }
-        .progress-fill.over { background: #ff0000; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; font-size: 14px; margin-bottom: 10px; }
-        input:focus { outline: none; border-color: #000; }
-        button { background: #000; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-size: 14px; -webkit-tap-highlight-color: transparent; }
-        button.secondary { background: none; color: #000; border: 1px solid #000; }
-        .meal-item { padding: 10px; border: 1px solid #eee; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .progress-bar { height: 20px; background: var(--progress-bg); position: relative; overflow: hidden; border-radius: var(--border-radius); }
+        .progress-fill { height: 100%; background: var(--primary-text); transition: width 0.3s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; color: var(--primary-bg); font-size: 11px; border-radius: var(--border-radius); }
+        .progress-fill.over { background: var(--accent-over); }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color-light); font-size: 14px; margin-bottom: 10px; }
+        input:focus { outline: none; border-color: var(--primary-text); }
+        .btn { background: var(--primary-text); color: var(--primary-bg); border: 1px solid transparent; padding: 10px 20px; cursor: pointer; font-size: 14px; -webkit-tap-highlight-color: transparent; transition: all 0.2s ease-in-out; border-radius: var(--border-radius); }
+        .btn-secondary { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-text); }
+        .btn-small { padding: 5px 10px; font-size: 12px; }
+        .btn:active { background: var(--secondary-text); color: var(--primary-bg); }
+        .btn-secondary:active { background: var(--primary-text); color: var(--primary-bg); }
+        .meal-item { padding: 10px; border: 1px solid var(--border-color); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .meal-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .meal-item.flash { animation: flashPulse 0.6s ease; }
         @keyframes flashPulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); background-color: #f0f8ff; } 100% { transform: scale(1); } }
         .meal-info { flex: 1; }
         .meal-name { font-weight: 500; margin-bottom: 2px; }
-        .meal-macros { font-size: 12px; color: #666; }
+        .meal-macros { font-size: 12px; color: var(--secondary-text); }
         .meal-actions { display: flex; gap: 10px; min-width: 110px; justify-content: flex-end; }
-        .meal-actions button { padding: 5px 10px; font-size: 12px; transition: all 0.2s ease-in-out; }
-        .added { background: #28a745; color: #fff; transform: scale(1.05); }
+        .added { background: var(--accent-add); color: var(--primary-bg); transform: scale(1.05); }
         .meal-count { color: #3d3d3d; font-weight: 500; margin-left: 2px; font-size: 13px; }
-        .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; transition: transform 0.2s ease; }
+        .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); transition: transform 0.2s ease; }
         .today-meal.updated { animation: slideScale 0.4s ease; }
         @keyframes slideScale { 0% { transform: translateX(-5px) scale(1); } 50% { transform: translateX(0) scale(1.01); } 100% { transform: translateX(0) scale(1); } }
         .today-meal-info { flex: 1; }
-        .remove-btn { background: none; color: #ff0000; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
-        .duplicate-btn, .decrement-btn, .reset-btn { background: #fff; color: #000; border: 1px solid #000; padding: 5px 10px; cursor: pointer; font-size: 12px; -webkit-user-select: none; user-select: none; }
-        .decrement-btn { margin-left: 5px; }
-        button:focus, .remove-btn:focus { outline: none; }
-        .duplicate-btn:active, .decrement-btn:active, .reset-btn:active { background: #000; color: #fff; }
+        .remove-btn { background: none; color: var(--accent-over); border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
         .remove-btn:active { opacity: 0.5; }
+        .decrement-btn { margin-left: 5px; -webkit-user-select: none; user-select: none; }
+        button:focus, .remove-btn:focus { outline: none; }
         .empty { color: #999; font-style: italic; padding: 20px 0; }
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 15px 0; }
-        .nav button { background: none; color: #666; border: none; padding: 8px 10px; font-size: 14px; position: relative; transition: color 0.2s ease; }
-        .nav button::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%) scaleX(0); width: 30px; height: 2px; background: #000; transition: transform 0.2s ease; }
-        .nav button.active { color: #000; font-weight: 500; }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--primary-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 15px 0; }
+        .nav button { background: none; color: var(--secondary-text); border: none; padding: 8px 10px; font-size: 14px; position: relative; transition: color 0.2s ease; cursor: pointer; }
+        .nav button::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%) scaleX(0); width: 30px; height: 2px; background: var(--primary-text); transition: transform 0.2s ease; }
+        .nav button.active { color: var(--primary-text); font-weight: 500; }
         .nav button.active::after { transform: translateX(-50%) scaleX(1); }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); z-index: 100; padding: 20px; overflow-y: auto; }
         .modal.active { display: block; }
-        .modal-content { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border: 1px solid #000; }
+        .modal-content { max-width: 500px; margin: 0 auto; background: var(--primary-bg); padding: 20px; border: 1px solid var(--primary-text); }
         .confirm-modal .modal-content { max-width: 350px; margin: 50vh auto 0; transform: translateY(-50%); text-align: center; }
         .confirm-message { margin-bottom: 20px; font-size: 16px; line-height: 1.4; }
         .confirm-actions { display: flex; gap: 10px; justify-content: center; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-size: 18px; font-weight: normal; }
-        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; color: #000; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; color: var(--primary-text); }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .scan-btn { background: #000; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px; }
-        #scanner-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 200; display: none; }
+        .scan-btn-icon { width: 20px; height: 20px; }
+        #scanner-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--primary-text); z-index: 200; display: none; }
         #scanner-container.active { display: block; }
         #scanner-video { width: 100%; height: 100%; object-fit: cover; }
         .scanner-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
         .scanner-header { background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); padding: 20px; pointer-events: auto; }
-        .scanner-close { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 10px 20px; cursor: pointer; font-size: 14px; }
-        .scanner-target { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 150px; border: 2px solid #00ff00; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5); }
-        .scanner-info { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 20px; text-align: center; color: #fff; }
-        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #000; border-radius: 50%; animation: spin 1s linear infinite; margin-left: 10px; }
+        .scanner-close { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 10px 20px; cursor: pointer; font-size: 14px; border-radius: var(--border-radius); }
+        .scanner-target { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 150px; border: 2px solid #00ff00; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5); border-radius: var(--border-radius); }
+        .scanner-info { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 20px; text-align: center; color: var(--primary-bg); }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid var(--primary-text); border-radius: 50%; animation: spin 1s linear infinite; margin-left: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .barcode-result { padding: 15px; background: #f5f5f5; border: 1px solid #ddd; margin-bottom: 15px; }
+        .barcode-result { padding: 15px; background: var(--progress-bg); border: 1px solid var(--border-color-light); margin-bottom: 15px; }
         .barcode-product-name { font-weight: 500; margin-bottom: 10px; }
-        .barcode-nutrition { font-size: 14px; color: #666; margin-bottom: 5px; }
+        .barcode-nutrition { font-size: 14px; color: var(--secondary-text); margin-bottom: 5px; }
         .barcode-actions { display: flex; gap: 10px; margin-top: 15px; }
-        @media (max-width: 480px) { body { padding: 15px; padding-bottom: 60px; } .row { grid-template-columns: 1fr; } }
-        .reset-btn, .decrement-btn, .duplicate-btn, .scan-btn, .scanner-close, .scanner-target, .meal-actions button, #mealForm button[type="submit"], #targetsForm button[type="submit"], .barcode-actions button, button[data-action="copyData"], button[data-action="openAddMealModal"], button[data-action="importData"] { border-radius: 3px; }
+        @media (max-width: 480px) { body { padding: 15px 15px 60px; } .row { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -87,7 +96,7 @@
         <h1>NutriTrack</h1>
         <div class="date-info">
             <span id="currentDate"></span>
-            <button class="reset-btn" data-action="resetDailyIntake">Reset</button>
+            <button class="btn btn-secondary btn-small" data-action="resetDailyIntake">Reset</button>
         </div>
     </div>
     <div class="section" id="progressSection">
@@ -100,29 +109,30 @@
         <div id="todayMealsList"></div>
     </div>
     <div class="section" id="mealsSection" style="display: none;">
-        <h2 class="section-title">Meal Library<button class="secondary" style="float: right; margin-top: -5px; position: relative; z-index: 1;" data-action="openAddMealModal">+ Add</button></h2>
-        <button class="scan-btn" data-action="startScanner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>Scan Barcode</button>
-        <input type="text" id="mealSearch" placeholder="Search..." oninput="filterMeals()">
+        <h2 class="section-title">Meal Library<button class="btn btn-secondary" style="float: right; margin-top: -5px; position: relative; z-index: 1;" data-action="openAddMealModal">+ Add</button></h2>
+        <button class="btn" data-action="startScanner" style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px;"><svg class="scan-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>Scan Barcode</button>
+        <input type="text" id="mealSearch" placeholder="Search...">
         <div id="mealList"></div>
     </div>
     <div class="section" id="settingsSection" style="display: none;">
         <h2 class="section-title">Daily Targets</h2>
-        <form id="targetsForm" data-action="saveTargets"><label style="display: block; margin-bottom: 5px; font-size: 14px;">Calories</label><input type="number" id="targetCalories" min="0" max="10000"><div class="row"><div><label style="display: block; margin-bottom: 5px; font-size: 14px;">Protein (g)</label><input type="number" id="targetProtein" min="0" max="500"></div><div><label style="display: block; margin-bottom: 5px; font-size: 14px;">Carbs (g)</label><input type="number" id="targetCarbs" min="0" max="1000"></div></div><label style="display: block; margin-bottom: 5px; font-size: 14px;">Fat (g)</label><input type="number" id="targetFat" min="0" max="500"><button type="submit" style="margin-top: 10px;">Save</button></form>
+        <form id="targetsForm" data-action="saveTargets"><label style="display: block; margin-bottom: 5px; font-size: 14px;">Calories</label><input type="number" id="targetCalories" min="0" max="10000"><div class="row"><div><label style="display: block; margin-bottom: 5px; font-size: 14px;">Protein (g)</label><input type="number" id="targetProtein" min="0" max="500"></div><div><label style="display: block; margin-bottom: 5px; font-size: 14px;">Carbs (g)</label><input type="number" id="targetCarbs" min="0" max="1000"></div></div><label style="display: block; margin-bottom: 5px; font-size: 14px;">Fat (g)</label><input type="number" id="targetFat" min="0" max="500"><button class="btn" type="submit" style="margin-top: 10px;">Save</button></form>
         <h2 class="section-title" style="margin-top: 40px;">Data Management</h2>
-        <div style="margin-bottom: 20px;"><button data-action="copyData" class="secondary" style="margin-bottom: 10px;">Copy Data to Clipboard</button><textarea id="pasteData" placeholder="Or paste data here..." style="height: 100px; font-size: 12px;"></textarea><button data-action="importData" class="secondary">Import from Paste</button></div>
+        <div style="margin-bottom: 20px;"><button data-action="copyData" class="btn btn-secondary" style="margin-bottom: 10px;">Copy Data</button><textarea id="pasteData" placeholder="Or paste data here..." style="height: 100px; font-size: 12px;"></textarea><button data-action="importData" class="btn btn-secondary">Import from Paste</button></div>
     </div>
     <div class="nav"><button data-action="showSection" data-section="progress" class="active">Progress</button><button data-action="showSection" data-section="meals">Meals</button><button data-action="showSection" data-section="settings">Settings</button></div>
-    <div class="modal" id="mealModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Add Meal</h3><button class="close-btn" data-action="closeModal" data-modal="mealModal">×</button></div><form id="mealForm" data-action="addMeal"><input type="text" id="mealName" placeholder="Meal name" required><div class="row"><input type="number" id="mealCalories" placeholder="Calories" min="0" required><input type="number" id="mealProtein" placeholder="Protein (g)" min="0" step="0.1" required></div><div class="row"><input type="number" id="mealCarbs" placeholder="Carbs (g)" min="0" step="0.1" required><input type="number" id="mealFat" placeholder="Fat (g)" min="0" step="0.1" required></div><input type="text" id="servingSize" placeholder="Serving size" value="1 serving"><button type="submit">Add</button></form></div></div>
+    <div class="modal" id="mealModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Add Meal</h3><button class="close-btn" data-action="closeModal" data-modal="mealModal">×</button></div><form id="mealForm" data-action="addMeal"><input type="text" name="mealName" placeholder="Meal name" required><div class="row"><input type="number" name="mealCalories" placeholder="Calories" min="0" required><input type="number" name="mealProtein" placeholder="Protein (g)" min="0" step="0.1" required></div><div class="row"><input type="number" name="mealCarbs" placeholder="Carbs (g)" min="0" step="0.1" required><input type="number" name="mealFat" placeholder="Fat (g)" min="0" step="0.1" required></div><input type="text" name="servingSize" placeholder="Serving size" value="1 serving"><button class="btn" type="submit">Add</button></form></div></div>
     <div class="modal" id="barcodeModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Product Found</h3><button class="close-btn" data-action="closeModal" data-modal="barcodeModal">×</button></div><div id="barcodeResult"></div></div></div>
-    <div class="modal confirm-modal" id="confirmModal"><div class="modal-content"><div class="confirm-message" id="confirmMessage"></div><div class="confirm-actions"><button class="secondary" data-action="closeModal" data-modal="confirmModal">Cancel</button><button id="confirmButton">Confirm</button></div></div></div>
+    <div class="modal confirm-modal" id="confirmModal"><div class="modal-content"><div class="confirm-message" id="confirmMessage"></div><div class="confirm-actions"><button class="btn btn-secondary" data-action="closeModal" data-modal="confirmModal">Cancel</button><button class="btn" id="confirmButton">Confirm</button></div></div></div>
     <div id="scanner-container"><video id="scanner-video" autoplay muted playsinline></video><div class="scanner-overlay"><div class="scanner-header"><button class="scanner-close" data-action="stopScanner">Close Scanner</button></div><div class="scanner-target"></div><div class="scanner-info"><p>Point Camera at Barcode</p><p id="scannerStatus">[Security Blocks Previews]</p></div></div></div>
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const $ = (sel, el = document) => el.querySelector(sel);
             const $$ = (sel, el = document) => el.querySelectorAll(sel);
-            const escapeHTML = str => String(str || '').replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'})[s]);
-            
+            const escapeHTML = str => String(str ?? '').replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'})[s]);
+            const formatPortions = p => p.toFixed(1).replace(/\.0$/, '');
+
             const defaultState = {
                 targets: { calories: 2000, protein: 50, carbs: 250, fat: 65 },
                 dailyIntake: { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] },
@@ -144,9 +154,10 @@
             const checkDateReset = () => { if (appState.currentDate !== new Date().toDateString()) { appState.currentDate = new Date().toDateString(); appState.dailyIntake = defaultState.dailyIntake; } };
 
             const renderProgress = () => {
+                const { dailyIntake, targets } = appState;
                 ['calories', 'protein', 'carbs', 'fat'].forEach(m => {
-                    const current = appState.dailyIntake[m] || 0;
-                    const target = appState.targets[m] || 1;
+                    const current = dailyIntake[m] ?? 0;
+                    const target = targets[m] || 1;
                     const percentage = Math.min((current / target) * 100, 999);
                     const bar = $(`#${m}Bar`);
                     bar.style.width = `${Math.min(percentage, 100)}%`;
@@ -165,13 +176,13 @@
                     const count = appState.dailyIntake.meals.find(m => m.id === meal.id)?.portions ?? 0;
                     return `<div class="meal-item" data-id="${meal.id}">
                         <div class="meal-info">
-                            <div class="meal-name">${escapeHTML(meal.name)} ${count > 0 ? `<span class="meal-count">(${count.toFixed(1).replace(/\.0$/, '')}x)</span>` : ''}</div>
+                            <div class="meal-name">${escapeHTML(meal.name)} ${count > 0 ? `<span class="meal-count">(${formatPortions(count)}x)</span>` : ''}</div>
                             <div class="meal-macros">${meal.calories}cal • P:${meal.protein}g • C:${meal.carbs}g • F:${meal.fat}g • ${escapeHTML(meal.servingSize)}</div>
                         </div>
                         <div class="meal-actions">
-                            ${count > 0 ? `<button class="decrement-btn" data-action="adjustMeal" data-id="${meal.id}" data-delta="-1">-</button>` : ''}
-                            <button class="duplicate-btn" data-action="adjustMeal" data-id="${meal.id}" data-delta="1">+</button>
-                            <button class="secondary" data-action="deleteMeal" data-id="${meal.id}">Del</button>
+                            ${count > 0 ? `<button class="btn btn-secondary btn-small decrement-btn" data-action="adjustMeal" data-id="${meal.id}" data-delta="-1">-</button>` : ''}
+                            <button class="btn btn-secondary btn-small" data-action="adjustMeal" data-id="${meal.id}" data-delta="1">+</button>
+                            <button class="btn btn-secondary btn-small" data-action="deleteMeal" data-id="${meal.id}">Del</button>
                         </div>
                     </div>`;
                 }).join('');
@@ -181,15 +192,15 @@
                 const list = $('#todayMealsList');
                 if (!appState.dailyIntake.meals.length) { list.innerHTML = '<div class="empty">No meals today</div>'; return; }
                 list.innerHTML = appState.dailyIntake.meals.map((meal, index) => {
-                    const portions = meal.portions > 1 ? `<span class="meal-count">(${meal.portions.toFixed(1).replace(/\.0$/, '')}x)</span>` : '';
+                    const portions = meal.portions > 1 ? `<span class="meal-count">(${formatPortions(meal.portions)}x)</span>` : '';
                     return `<div class="today-meal" data-index="${index}">
                         <div class="today-meal-info">
                             <div>${escapeHTML(meal.name)} ${portions}</div>
                             <div class="meal-count">${Math.round(meal.calories)}cal • P:${meal.protein.toFixed(1)}g • C:${meal.carbs.toFixed(1)}g • F:${meal.fat.toFixed(1)}g</div>
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button class="decrement-btn" data-action="adjustTodayMeal" data-index="${index}" data-delta="-1">-</button>
-                            <button class="duplicate-btn" data-action="adjustTodayMeal" data-index="${index}" data-delta="1">+</button>
+                            <button class="btn btn-secondary btn-small" data-action="adjustTodayMeal" data-index="${index}" data-delta="-1">-</button>
+                            <button class="btn btn-secondary btn-small" data-action="adjustTodayMeal" data-index="${index}" data-delta="1">+</button>
                             <button class="remove-btn" data-action="removeTodayMeal" data-index="${index}">Remove</button>
                         </div>
                     </div>`;
@@ -219,18 +230,19 @@
                 const mealFromLibrary = appState.mealLibrary.find(m => m.id === mealId);
                 if (!mealFromLibrary) return;
                 let existingMeal = appState.dailyIntake.meals.find(m => m.id === mealId);
-                if (!existingMeal && delta > 0) {
-                    existingMeal = { ...mealFromLibrary, portions: 0 };
-                    appState.dailyIntake.meals.push(existingMeal);
-                }
-                if (!existingMeal) return;
+                
+                const currentPortions = existingMeal?.portions ?? 0;
+                const newPortions = currentPortions + delta;
 
-                const newPortions = (existingMeal.portions || 0) + delta;
                 if (newPortions < 0.1) {
                     appState.dailyIntake.meals = appState.dailyIntake.meals.filter(m => m.id !== mealId);
                 } else {
-                    existingMeal.portions = newPortions;
-                    Object.keys(mealFromLibrary).forEach(key => { if (typeof mealFromLibrary[key] === 'number' && key !== 'id') existingMeal[key] = mealFromLibrary[key] * newPortions; });
+                    if (!existingMeal) {
+                        existingMeal = { ...mealFromLibrary, portions: newPortions };
+                        appState.dailyIntake.meals.push(existingMeal);
+                    } else {
+                        existingMeal.portions = newPortions;
+                    }
                 }
                 recalculateDailyTotals();
                 const mealItem = $(`.meal-item[data-id="${mealId}"]`);
@@ -239,15 +251,16 @@
             };
 
             const recalculateDailyTotals = () => {
-                const totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-                appState.dailyIntake.meals.forEach(meal => {
+                const initialTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+                const newTotals = appState.dailyIntake.meals.reduce((totals, meal) => {
                     const baseMeal = appState.mealLibrary.find(m => m.id === meal.id) || meal;
-                    totals.calories += (baseMeal.calories || 0) * meal.portions;
-                    totals.protein += (baseMeal.protein || 0) * meal.portions;
-                    totals.carbs += (baseMeal.carbs || 0) * meal.portions;
-                    totals.fat += (baseMeal.fat || 0) * meal.portions;
-                });
-                appState.dailyIntake = { ...appState.dailyIntake, ...totals };
+                    totals.calories += (baseMeal.calories ?? 0) * meal.portions;
+                    totals.protein += (baseMeal.protein ?? 0) * meal.portions;
+                    totals.carbs += (baseMeal.carbs ?? 0) * meal.portions;
+                    totals.fat += (baseMeal.fat ?? 0) * meal.portions;
+                    return totals;
+                }, initialTotals);
+                appState.dailyIntake = { ...appState.dailyIntake, ...newTotals };
             };
             
             const handlers = {
@@ -256,9 +269,14 @@
                 closeModal: e => $(`#${e.dataset.modal}`).classList.remove('active'),
                 addMeal: e => {
                     e.preventDefault();
-                    const form = $('#mealForm');
-                    const meal = { id: Date.now(), name: form.mealName.value, calories: parseFloat(form.mealCalories.value), protein: parseFloat(form.mealProtein.value), carbs: parseFloat(form.mealCarbs.value), fat: parseFloat(form.mealFat.value), servingSize: form.servingSize.value || '1 serving' };
-                    appState.mealLibrary.unshift(meal);
+                    const { mealName, mealCalories, mealProtein, mealCarbs, mealFat, servingSize } = e.target.elements;
+                    const newMeal = { 
+                        id: Date.now(), name: mealName.value, 
+                        calories: parseFloat(mealCalories.value), protein: parseFloat(mealProtein.value), 
+                        carbs: parseFloat(mealCarbs.value), fat: parseFloat(mealFat.value), 
+                        servingSize: servingSize.value || '1 serving' 
+                    };
+                    appState.mealLibrary.unshift(newMeal);
                     updateUI();
                     $('#mealModal').classList.remove('active');
                 },
@@ -301,7 +319,7 @@
                 addScannedAndUse: () => { if (!appState.scannedProduct) return; const newMeal = { id: Date.now(), ...appState.scannedProduct }; appState.mealLibrary.unshift(newMeal); adjustMeal(newMeal.id, 1); $('#barcodeModal').classList.remove('active'); }
             };
             
-            document.body.addEventListener('click', e => { const action = e.target.closest('[data-action]')?.dataset.action; if (handlers[action]) handlers[action](e.target.closest('[data-action]')); });
+            document.body.addEventListener('click', e => { const action = e.target.closest('[data-action]')?.dataset.action; if (action && handlers[action]) handlers[action](e.target.closest('[data-action]')); });
             $('#mealSearch').addEventListener('input', renderMealLibrary);
 
             async function fetchProductData(barcode) {
@@ -310,25 +328,28 @@
                 resultDiv.innerHTML = '<p>Fetching product information...<span class="loading"></span></p>';
                 try {
                     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+                    if (!res.ok) throw new Error('Network response was not ok');
                     const data = await res.json();
                     if (data.status !== 1 || !data.product) throw new Error('Product not found');
-                    const p = data.product;
+                    
+                    const { product: p } = data;
                     const n = p.nutriments || {};
                     appState.scannedProduct = {
                         name: `${p.product_name || 'Unknown'} (${p.brands || ''})`.trim(),
-                        calories: Math.round(n['energy-kcal_serving'] || n['energy-kcal_100g'] || 0),
-                        protein: parseFloat(n.proteins_serving || n.proteins_100g || 0).toFixed(1),
-                        carbs: parseFloat(n.carbohydrates_serving || n.carbohydrates_100g || 0).toFixed(1),
-                        fat: parseFloat(n.fat_serving || n.fat_100g || 0).toFixed(1),
+                        calories: Math.round(n['energy-kcal_serving'] ?? n['energy-kcal_100g'] ?? 0),
+                        protein: parseFloat(n.proteins_serving ?? n.proteins_100g ?? 0).toFixed(1),
+                        carbs: parseFloat(n.carbohydrates_serving ?? n.carbohydrates_100g ?? 0).toFixed(1),
+                        fat: parseFloat(n.fat_serving ?? n.fat_100g ?? 0).toFixed(1),
                         servingSize: p.serving_size || '100g'
                     };
+                    const { name, servingSize, calories, protein, carbs, fat } = appState.scannedProduct;
                     resultDiv.innerHTML = `<div class="barcode-result">
-                        <div class="barcode-product-name">${escapeHTML(appState.scannedProduct.name)}</div>
-                        <div class="barcode-nutrition">Per ${escapeHTML(appState.scannedProduct.servingSize)}</div>
-                        <div class="barcode-nutrition">Calories: ${appState.scannedProduct.calories} | P: ${appState.scannedProduct.protein}g | C: ${appState.scannedProduct.carbs}g | F: ${appState.scannedProduct.fat}g</div>
+                        <div class="barcode-product-name">${escapeHTML(name)}</div>
+                        <div class="barcode-nutrition">Per ${escapeHTML(servingSize)}</div>
+                        <div class="barcode-nutrition">Calories: ${calories} | P: ${protein}g | C: ${carbs}g | F: ${fat}g</div>
                         <div class="barcode-actions">
-                            <button data-action="addScannedProduct">Add to Library</button>
-                            <button class="secondary" data-action="addScannedAndUse">Add & Use Now</button>
+                            <button class="btn" data-action="addScannedProduct">Add to Library</button>
+                            <button class="btn btn-secondary" data-action="addScannedAndUse">Add & Use Now</button>
                         </div></div>`;
                 } catch (error) {
                     resultDiv.innerHTML = `<p style="color: #666;">Product not found or error fetching data.</p>`;
@@ -338,7 +359,8 @@
             function init() {
                 checkDateReset();
                 $('#currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                $('#targetCalories').value = appState.targets.calories; $('#targetProtein').value = appState.targets.protein; $('#targetCarbs').value = appState.targets.carbs; $('#targetFat').value = appState.targets.fat;
+                const { calories, protein, carbs, fat } = appState.targets;
+                $('#targetCalories').value = calories; $('#targetProtein').value = protein; $('#targetCarbs').value = carbs; $('#targetFat').value = fat;
                 recalculateDailyTotals();
                 updateUI();
                 showSection('progress', $('.nav button[data-section="progress"]'));
