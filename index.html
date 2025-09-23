@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>NutriTrack</title>
    
     <style>
@@ -125,8 +128,52 @@
     <div class="modal" id="barcodeModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Product Found</h3><button class="close-btn" data-action="closeModal" data-modal="barcodeModal">×</button></div><div id="barcodeResult"></div></div></div>
     <div class="modal confirm-modal" id="confirmModal"><div class="modal-content"><div class="confirm-message" id="confirmMessage"></div><div class="confirm-actions"><button class="btn btn-secondary" data-action="closeModal" data-modal="confirmModal">Cancel</button><button class="btn" id="confirmButton">Confirm</button></div></div></div>
     <div id="scanner-container"><video id="scanner-video" autoplay muted playsinline></video><div class="scanner-overlay"><div class="scanner-header"><button class="scanner-close" data-action="stopScanner">Close Scanner</button></div><div class="scanner-target"></div><div class="scanner-info"><p>Point Camera at Barcode</p><p id="scannerStatus">[Security Blocks Previews]</p></div></div></div>
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <script>
+        // Simple version management - update these with each release
+        const APP_VERSION = '1.0.3';
+        const LAST_UPDATE = '2025-01-22';
+        
+        // Check for updates and clear cache if needed
+        function checkForUpdates() {
+            const storedVersion = localStorage.getItem('app_version');
+            const storedDate = localStorage.getItem('app_update_date');
+            
+            if (!storedVersion || storedVersion !== APP_VERSION || storedDate !== LAST_UPDATE) {
+                // Clear browser caches
+                if ('caches' in window) {
+                    caches.keys().then(cacheNames => {
+                        cacheNames.forEach(cacheName => caches.delete(cacheName));
+                    });
+                }
+                
+                // Store new version info
+                localStorage.setItem('app_version', APP_VERSION);
+                localStorage.setItem('app_update_date', LAST_UPDATE);
+                
+                // Show update notification (only if updating, not first install)
+                if (storedVersion && storedVersion !== APP_VERSION) {
+                    const updateNotice = document.createElement('div');
+                    updateNotice.style.cssText = `
+                        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+                        background: #4CAF50; color: white; padding: 12px; text-align: center;
+                        font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                    `;
+                    updateNotice.innerHTML = `✓ Updated to version ${APP_VERSION}`;
+                    document.body.appendChild(updateNotice);
+                    setTimeout(() => updateNotice.remove(), 3000);
+                }
+            }
+        }
+        
+        // Load external scripts with cache busting
+        const timestamp = Date.now();
+        const quaggaScript = document.createElement('script');
+        quaggaScript.src = `https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js?v=${timestamp}`;
+        document.head.appendChild(quaggaScript);
+        
+        // Run version check
+        checkForUpdates();
+        
         document.addEventListener('DOMContentLoaded', () => {
             const $ = (sel, el = document) => el.querySelector(sel);
             const $$ = (sel, el = document) => el.querySelectorAll(sel);
