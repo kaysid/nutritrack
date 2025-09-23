@@ -124,7 +124,7 @@
         <div style="margin-bottom: 20px;"><button data-action="copyData" class="btn btn-secondary" style="margin-bottom: 10px;">Copy Data</button><textarea id="pasteData" placeholder="Or paste data here..." style="height: 100px; font-size: 12px;"></textarea><button data-action="importData" class="btn btn-secondary">Import from Paste</button></div>
     </div>
     <div class="nav"><button data-action="showSection" data-section="progress" class="active">Progress</button><button data-action="showSection" data-section="meals">Meals</button><button data-action="showSection" data-section="settings">Settings</button></div>
-    <div class="modal" id="mealModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Add Meal</h3><button class="close-btn" data-action="closeModal" data-modal="mealModal">×</button></div><form id="mealForm" data-action="addMeal"><input type="text" name="mealName" placeholder="Meal name" required><div class="row"><input type="number" name="mealCalories" placeholder="Calories" min="0" required><input type="number" name="mealProtein" placeholder="Protein (g)" min="0" step="0.1" required></div><div class="row"><input type="number" name="mealCarbs" placeholder="Carbs (g)" min="0" step="0.1" required><input type="number" name="mealFat" placeholder="Fat (g)" min="0" step="0.1" required></div><input type="text" name="servingSize" placeholder="Serving size" value="1 serving"><button class="btn" type="submit">Add</button></form></div></div>
+    <div class="modal" id="mealModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Add Meal</h3><button class="close-btn" data-action="closeModal" data-modal="mealModal">×</button></div><form id="mealForm" data-action="addMeal"><input type="text" name="mealName" placeholder="Meal name" required><div class="row"><input type="number" name="mealCalories" placeholder="Calories" min="0" required><input type="number" name="mealProtein" placeholder="Protein (g)" min="0" step="0.1" required></div><div class="row"><input type="number" name="mealCarbs" placeholder="Carbs (g)" min="0" step="0.1" required><input type="number" name="mealFat" placeholder="Fat (g)" min="0" step="0.1" required></div><button class="btn" type="submit">Add</button></form></div></div>
     <div class="modal" id="barcodeModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Product Found</h3><button class="close-btn" data-action="closeModal" data-modal="barcodeModal">×</button></div><div id="barcodeResult"></div></div></div>
     <div class="modal confirm-modal" id="confirmModal"><div class="modal-content"><div class="confirm-message" id="confirmMessage"></div><div class="confirm-actions"><button class="btn btn-secondary" data-action="closeModal" data-modal="confirmModal">Cancel</button><button class="btn" id="confirmButton">Confirm</button></div></div></div>
     <div id="scanner-container"><video id="scanner-video" autoplay muted playsinline></video><div class="scanner-overlay"><div class="scanner-header"><button class="scanner-close" data-action="stopScanner">Close Scanner</button></div><div class="scanner-target"></div><div class="scanner-info"><p>Point Camera at Barcode</p><p id="scannerStatus">[Security Blocks Previews]</p></div></div></div>
@@ -350,7 +350,7 @@
                 closeModal: e => $(`#${e.dataset.modal}`).classList.remove('active'),
                 addMeal: e => {
                     e.preventDefault();
-                    const { mealName, mealCalories, mealProtein, mealCarbs, mealFat, servingSize } = e.target.elements;
+                    const { mealName, mealCalories, mealProtein, mealCarbs, mealFat } = e.target.elements;
                     const newMeal = { 
                         id: Date.now(), 
                         name: mealName.value, 
@@ -358,7 +358,7 @@
                         protein: parseFloat(mealProtein.value), 
                         carbs: parseFloat(mealCarbs.value), 
                         fat: parseFloat(mealFat.value), 
-                        servingSize: servingSize.value || '1 serving' 
+                        servingSize: "1 serving"
                     };
                     appState.mealLibrary.unshift(newMeal);
                     updateUI();
@@ -455,12 +455,24 @@
                 }
             };
             
-            // Fixed event delegation
+            // Fixed event delegation - handle both clicks and form submissions
             document.body.addEventListener('click', e => { 
                 const actionElement = e.target.closest('[data-action]');
                 if (actionElement) {
                     const action = actionElement.dataset.action;
                     if (action && handlers[action]) {
+                        handlers[action](actionElement);
+                    }
+                }
+            });
+            
+            // Explicitly handle form submissions
+            document.body.addEventListener('submit', e => {
+                const actionElement = e.target.closest('[data-action]');
+                if (actionElement) {
+                    const action = actionElement.dataset.action;
+                    if (action && handlers[action]) {
+                        e.preventDefault();
                         handlers[action](actionElement);
                     }
                 }
