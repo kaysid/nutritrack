@@ -74,17 +74,7 @@
         .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; color: var(--primary-text); }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .scan-btn-icon { width: 20px; height: 20px; }
-        #scanner-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--primary-text);
-            z-index: 200;
-            display: none;
-            pointer-events: none;
-        }
+        #scanner-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--primary-text); z-index: 200; display: none; }
         #scanner-container.active { display: block; }
         #scanner-video { width: 100%; height: 100%; object-fit: cover; }
         .scanner-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
@@ -147,11 +137,16 @@
                 targets: { calories: 2000, protein: 50, carbs: 250, fat: 65 },
                 dailyIntake: { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] },
                 mealLibrary: [
-                    { id: Date.now() + 1, name: "Chicken Breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, servingSize: "100g" }, { id: Date.now() + 2, name: "Brown Rice", calories: 112, protein: 2.6, carbs: 23.5, fat: 0.9, servingSize: "100g" },
-                    { id: Date.now() + 3, name: "Avocado", calories: 160, protein: 2, carbs: 9, fat: 15, servingSize: "100g" }, { id: Date.now() + 4, name: "Greek Yogurt", calories: 100, protein: 10, carbs: 6, fat: 0, servingSize: "150g" },
-                    { id: Date.now() + 5, name: "Banana", calories: 105, protein: 1.3, carbs: 27, fat: 0.4, servingSize: "1 medium" }, { id: Date.now() + 6, name: "Oatmeal", calories: 150, protein: 5, carbs: 27, fat: 3, servingSize: "1/2 cup" },
-                    { id: Date.now() + 7, name: "Almonds", calories: 164, protein: 6, carbs: 6, fat: 14, servingSize: "28g" }, { id: Date.now() + 8, name: "Egg", calories: 70, protein: 6, carbs: 0.5, fat: 5, servingSize: "1 large" },
-                    { id: Date.now() + 9, name: "Broccoli", calories: 31, protein: 2.5, carbs: 6, fat: 0.4, servingSize: "100g" }, { id: Date.now() + 10, name: "Salmon", calories: 208, protein: 22, carbs: 0, fat: 13, servingSize: "100g" }
+                    { id: Date.now() + 1, name: "Chicken Breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, servingSize: "100g" }, 
+                    { id: Date.now() + 2, name: "Brown Rice", calories: 112, protein: 2.6, carbs: 23.5, fat: 0.9, servingSize: "100g" },
+                    { id: Date.now() + 3, name: "Avocado", calories: 160, protein: 2, carbs: 9, fat: 15, servingSize: "100g" }, 
+                    { id: Date.now() + 4, name: "Greek Yogurt", calories: 100, protein: 10, carbs: 6, fat: 0, servingSize: "150g" },
+                    { id: Date.now() + 5, name: "Banana", calories: 105, protein: 1.3, carbs: 27, fat: 0.4, servingSize: "1 medium" }, 
+                    { id: Date.now() + 6, name: "Oatmeal", calories: 150, protein: 5, carbs: 27, fat: 3, servingSize: "1/2 cup" },
+                    { id: Date.now() + 7, name: "Almonds", calories: 164, protein: 6, carbs: 6, fat: 14, servingSize: "28g" }, 
+                    { id: Date.now() + 8, name: "Egg", calories: 70, protein: 6, carbs: 0.5, fat: 5, servingSize: "1 large" },
+                    { id: Date.now() + 9, name: "Broccoli", calories: 31, protein: 2.5, carbs: 6, fat: 0.4, servingSize: "100g" }, 
+                    { id: Date.now() + 10, name: "Salmon", calories: 208, protein: 22, carbs: 0, fat: 13, servingSize: "100g" }
                 ],
                 currentDate: new Date().toDateString(),
                 scannedProduct: null
@@ -161,7 +156,12 @@
             if (!localStorage.getItem('nutritionAppState')) appState.mealLibrary = defaultState.mealLibrary;
             
             const saveState = () => localStorage.setItem('nutritionAppState', JSON.stringify(appState));
-            const checkDateReset = () => { if (appState.currentDate !== new Date().toDateString()) { appState.currentDate = new Date().toDateString(); appState.dailyIntake = defaultState.dailyIntake; } };
+            const checkDateReset = () => { 
+                if (appState.currentDate !== new Date().toDateString()) { 
+                    appState.currentDate = new Date().toDateString(); 
+                    appState.dailyIntake = defaultState.dailyIntake; 
+                } 
+            };
 
             const renderProgress = () => {
                 const { dailyIntake, targets } = appState;
@@ -181,7 +181,10 @@
                 const searchTerm = $('#mealSearch').value.toLowerCase();
                 const filtered = appState.mealLibrary.filter(m => m.name.toLowerCase().includes(searchTerm));
                 const list = $('#mealList');
-                if (!filtered.length) { list.innerHTML = '<div class="empty">No meals found</div>'; return; }
+                if (!filtered.length) { 
+                    list.innerHTML = '<div class="empty">No meals found</div>'; 
+                    return; 
+                }
                 list.innerHTML = filtered.map(meal => {
                     const count = appState.dailyIntake.meals.find(m => m.id === meal.id)?.portions ?? 0;
                     return `<div class="meal-item" data-id="${meal.id}">
@@ -200,7 +203,10 @@
 
             const renderTodaysMeals = () => {
                 const list = $('#todayMealsList');
-                if (!appState.dailyIntake.meals.length) { list.innerHTML = '<div class="empty">No meals today</div>'; return; }
+                if (!appState.dailyIntake.meals.length) { 
+                    list.innerHTML = '<div class="empty">No meals today</div>'; 
+                    return; 
+                }
                 list.innerHTML = appState.dailyIntake.meals.map((meal, index) => {
                     const portions = meal.portions > 1 ? `<span class="meal-count">(${formatPortions(meal.portions)}x)</span>` : '';
                     return `<div class="today-meal" data-index="${index}">
@@ -217,10 +223,18 @@
                 }).join('');
             };
             
-            const updateUI = () => { renderProgress(); renderTodaysMeals(); renderMealLibrary(); saveState(); };
+            const updateUI = () => { 
+                renderProgress(); 
+                renderTodaysMeals(); 
+                renderMealLibrary(); 
+                saveState(); 
+            };
 
             const showSection = (id, btn) => {
-                $$('.section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
+                $$('.section').forEach(s => { 
+                    s.style.display = 'none'; 
+                    s.classList.remove('active'); 
+                });
                 $$('.nav button').forEach(b => b.classList.remove('active'));
                 const section = $(`#${id}Section`);
                 section.style.display = 'block';
@@ -234,7 +248,11 @@
                 confirmCallback = callback;
                 $('#confirmModal').classList.add('active');
             };
-            $('#confirmButton').addEventListener('click', () => { if (confirmCallback) confirmCallback(); $('#confirmModal').classList.remove('active'); });
+            
+            $('#confirmButton').addEventListener('click', () => { 
+                if (confirmCallback) confirmCallback(); 
+                $('#confirmModal').classList.remove('active'); 
+            });
 
             const adjustMeal = (mealId, delta) => {
                 const mealFromLibrary = appState.mealLibrary.find(m => m.id === mealId);
@@ -256,7 +274,10 @@
                 }
                 recalculateDailyTotals();
                 const mealItem = $(`.meal-item[data-id="${mealId}"]`);
-                if (mealItem) { mealItem.classList.add('flash'); setTimeout(() => mealItem.classList.remove('flash'), 600); }
+                if (mealItem) { 
+                    mealItem.classList.add('flash'); 
+                    setTimeout(() => mealItem.classList.remove('flash'), 600); 
+                }
                 updateUI();
             };
 
@@ -275,15 +296,21 @@
             
             const handlers = {
                 showSection: e => showSection(e.dataset.section, e),
-                openAddMealModal: () => { $('#mealForm').reset(); $('#mealModal').classList.add('active'); },
+                openAddMealModal: () => { 
+                    $('#mealForm').reset(); 
+                    $('#mealModal').classList.add('active'); 
+                },
                 closeModal: e => $(`#${e.dataset.modal}`).classList.remove('active'),
                 addMeal: e => {
                     e.preventDefault();
                     const { mealName, mealCalories, mealProtein, mealCarbs, mealFat, servingSize } = e.target.elements;
                     const newMeal = { 
-                        id: Date.now(), name: mealName.value, 
-                        calories: parseFloat(mealCalories.value), protein: parseFloat(mealProtein.value), 
-                        carbs: parseFloat(mealCarbs.value), fat: parseFloat(mealFat.value), 
+                        id: Date.now(), 
+                        name: mealName.value, 
+                        calories: parseFloat(mealCalories.value), 
+                        protein: parseFloat(mealProtein.value), 
+                        carbs: parseFloat(mealCarbs.value), 
+                        fat: parseFloat(mealFat.value), 
                         servingSize: servingSize.value || '1 serving' 
                     };
                     appState.mealLibrary.unshift(newMeal);
@@ -292,14 +319,26 @@
                 },
                 saveTargets: e => {
                     e.preventDefault();
-                    appState.targets = { calories: parseInt($('#targetCalories').value), protein: parseInt($('#targetProtein').value), carbs: parseInt($('#targetCarbs').value), fat: parseInt($('#targetFat').value) };
+                    appState.targets = { 
+                        calories: parseInt($('#targetCalories').value), 
+                        protein: parseInt($('#targetProtein').value), 
+                        carbs: parseInt($('#targetCarbs').value), 
+                        fat: parseInt($('#targetFat').value) 
+                    };
                     updateUI();
                     const btn = e.target.querySelector('button');
                     btn.textContent = 'Saved';
                     setTimeout(() => { btn.textContent = 'Save'; }, 1500);
                 },
-                resetDailyIntake: () => showConfirm("Reset today's intake?", () => { appState.dailyIntake = defaultState.dailyIntake; recalculateDailyTotals(); updateUI(); }),
-                deleteMeal: e => showConfirm("Delete this meal?", () => { appState.mealLibrary = appState.mealLibrary.filter(m => m.id !== parseInt(e.dataset.id)); updateUI(); }),
+                resetDailyIntake: () => showConfirm("Reset today's intake?", () => { 
+                    appState.dailyIntake = defaultState.dailyIntake; 
+                    recalculateDailyTotals(); 
+                    updateUI(); 
+                }),
+                deleteMeal: e => showConfirm("Delete this meal?", () => { 
+                    appState.mealLibrary = appState.mealLibrary.filter(m => m.id !== parseInt(e.dataset.id)); 
+                    updateUI(); 
+                }),
                 adjustMeal: e => adjustMeal(parseInt(e.dataset.id), parseFloat(e.dataset.delta)),
                 adjustTodayMeal: e => {
                     const meal = appState.dailyIntake.meals[e.dataset.index];
@@ -311,11 +350,37 @@
                     updateUI();
                 },
                 copyData: () => navigator.clipboard.writeText(JSON.stringify(appState, null, 2)).then(() => alert('Data copied!')),
-                importData: () => showConfirm('Replace all data with imported data?', () => { try { const imported = JSON.parse($('#pasteData').value.trim()); appState = { ...defaultState, ...imported }; $('#pasteData').value = ''; init(); } catch (err) { alert('Invalid data format.'); } }),
+                importData: () => showConfirm('Replace all data with imported data?', () => { 
+                    try { 
+                        const imported = JSON.parse($('#pasteData').value.trim()); 
+                        appState = { ...defaultState, ...imported }; 
+                        $('#pasteData').value = ''; 
+                        init(); 
+                    } catch (err) { 
+                        alert('Invalid data format.'); 
+                    } 
+                }),
                 startScanner: () => {
                     $('#scanner-container').classList.add('active');
-                    Quagga.init({ inputStream: { name: "Live", type: "LiveStream", target: $('#scanner-video'), constraints: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" } }, decoder: { readers: ["ean_reader", "upc_reader"] } }, (err) => {
-                        if (err) { $('#scannerStatus').textContent = 'Camera access denied'; return; }
+                    Quagga.init({ 
+                        inputStream: { 
+                            name: "Live", 
+                            type: "LiveStream", 
+                            target: $('#scanner-video'), 
+                            constraints: { 
+                                width: { ideal: 1280 }, 
+                                height: { ideal: 720 }, 
+                                facingMode: "environment" 
+                            } 
+                        }, 
+                        decoder: { 
+                            readers: ["ean_reader", "upc_reader"] 
+                        } 
+                    }, (err) => {
+                        if (err) { 
+                            $('#scannerStatus').textContent = 'Camera access denied'; 
+                            return; 
+                        }
                         Quagga.start();
                     });
                     Quagga.onDetected(result => {
@@ -324,12 +389,36 @@
                         fetchProductData(result.codeResult.code);
                     });
                 },
-                stopScanner: () => { Quagga.stop(); $('#scanner-container').classList.remove('active'); },
-                addScannedProduct: () => { if (!appState.scannedProduct) return; appState.mealLibrary.unshift({ id: Date.now(), ...appState.scannedProduct }); updateUI(); $('#barcodeModal').classList.remove('active'); },
-                addScannedAndUse: () => { if (!appState.scannedProduct) return; const newMeal = { id: Date.now(), ...appState.scannedProduct }; appState.mealLibrary.unshift(newMeal); adjustMeal(newMeal.id, 1); $('#barcodeModal').classList.remove('active'); }
+                stopScanner: () => { 
+                    Quagga.stop(); 
+                    $('#scanner-container').classList.remove('active'); 
+                },
+                addScannedProduct: () => { 
+                    if (!appState.scannedProduct) return; 
+                    appState.mealLibrary.unshift({ id: Date.now(), ...appState.scannedProduct }); 
+                    updateUI(); 
+                    $('#barcodeModal').classList.remove('active'); 
+                },
+                addScannedAndUse: () => { 
+                    if (!appState.scannedProduct) return; 
+                    const newMeal = { id: Date.now(), ...appState.scannedProduct }; 
+                    appState.mealLibrary.unshift(newMeal); 
+                    adjustMeal(newMeal.id, 1); 
+                    $('#barcodeModal').classList.remove('active'); 
+                }
             };
             
-            document.addEventListener('click', e => { const action = e.target.closest('[data-action]')?.dataset.action; if (action && handlers[action]) handlers[action](e.target.closest('[data-action]')); });
+            // Fixed event delegation
+            document.body.addEventListener('click', e => { 
+                const actionElement = e.target.closest('[data-action]');
+                if (actionElement) {
+                    const action = actionElement.dataset.action;
+                    if (action && handlers[action]) {
+                        handlers[action](actionElement);
+                    }
+                }
+            });
+            
             $('#mealSearch').addEventListener('input', renderMealLibrary);
 
             async function fetchProductData(barcode) {
@@ -347,16 +436,16 @@
                     appState.scannedProduct = {
                         name: `${p.product_name || 'Unknown'} (${p.brands || ''})`.trim(),
                         calories: Math.round(n['energy-kcal_serving'] ?? n['energy-kcal_100g'] ?? 0),
-                        protein: parseFloat(n.proteins_serving ?? n.proteins_100g ?? 0).toFixed(1),
-                        carbs: parseFloat(n.carbohydrates_serving ?? n.carbohydrates_100g ?? 0).toFixed(1),
-                        fat: parseFloat(n.fat_serving ?? n.fat_100g ?? 0).toFixed(1),
+                        protein: parseFloat(n.proteins_serving ?? n.proteins_100g ?? 0),
+                        carbs: parseFloat(n.carbohydrates_serving ?? n.carbohydrates_100g ?? 0),
+                        fat: parseFloat(n.fat_serving ?? n.fat_100g ?? 0),
                         servingSize: p.serving_size || '100g'
                     };
                     const { name, servingSize, calories, protein, carbs, fat } = appState.scannedProduct;
                     resultDiv.innerHTML = `<div class="barcode-result">
                         <div class="barcode-product-name">${escapeHTML(name)}</div>
                         <div class="barcode-nutrition">Per ${escapeHTML(servingSize)}</div>
-                        <div class="barcode-nutrition">Calories: ${calories} | P: ${protein}g | C: ${carbs}g | F: ${fat}g</div>
+                        <div class="barcode-nutrition">Calories: ${calories} | P: ${protein.toFixed(1)}g | C: ${carbs.toFixed(1)}g | F: ${fat.toFixed(1)}g</div>
                         <div class="barcode-actions">
                             <button class="btn" data-action="addScannedProduct">Add to Library</button>
                             <button class="btn btn-secondary" data-action="addScannedAndUse">Add & Use Now</button>
@@ -368,9 +457,16 @@
 
             function init() {
                 checkDateReset();
-                $('#currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                $('#currentDate').textContent = new Date().toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
                 const { calories, protein, carbs, fat } = appState.targets;
-                $('#targetCalories').value = calories; $('#targetProtein').value = protein; $('#targetCarbs').value = carbs; $('#targetFat').value = fat;
+                $('#targetCalories').value = calories; 
+                $('#targetProtein').value = protein; 
+                $('#targetCarbs').value = carbs; 
+                $('#targetFat').value = fat;
                 recalculateDailyTotals();
                 updateUI();
                 showSection('progress', $('.nav button[data-section="progress"]'));
