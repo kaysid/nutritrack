@@ -319,7 +319,7 @@
                 addScannedAndUse: () => { if (!appState.scannedProduct) return; const newMeal = { id: Date.now(), ...appState.scannedProduct }; appState.mealLibrary.unshift(newMeal); adjustMeal(newMeal.id, 1); $('#barcodeModal').classList.remove('active'); }
             };
             
-            document.body.addEventListener('click', e => { const action = e.target.closest('[data-action]')?.dataset.action; if (action && handlers[action]) handlers[action](e.target.closest('[data-action]')); });
+            document.addEventListener('click', e => { const action = e.target.closest('[data-action]')?.dataset.action; if (action && handlers[action]) handlers[action](e.target.closest('[data-action]')); });
             $('#mealSearch').addEventListener('input', renderMealLibrary);
 
             async function fetchProductData(barcode) {
