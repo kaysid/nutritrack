@@ -199,8 +199,13 @@
                 scannedProduct: null
             };
             
-            let appState = JSON.parse(localStorage.getItem('nutritionAppState')) || defaultState;
-            if (!localStorage.getItem('nutritionAppState')) appState.mealLibrary = defaultState.mealLibrary;
+            const storedState = JSON.parse(localStorage.getItem('nutritionAppState'));
+            let appState = storedState || defaultState;
+
+            // Ensure mealLibrary is always a valid array, preserving user's saved meals.
+            if (!appState.mealLibrary || !Array.isArray(appState.mealLibrary)) {
+                appState.mealLibrary = defaultState.mealLibrary;
+            }
             
             const saveState = () => localStorage.setItem('nutritionAppState', JSON.stringify(appState));
             const checkDateReset = () => { 
