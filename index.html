@@ -407,6 +407,8 @@
                 if (search.value !== '') {
                     search.value = '';
                     renderMealLibrary();
+                    // Re-focus synchronously so mobile keyboards stay open
+                    search.focus();
                 }
             },
             addCustomPortion: el => {
@@ -423,6 +425,7 @@
                 if (search.value !== '') {
                     search.value = '';
                     renderMealLibrary();
+                    search.focus();
                 }
             },
             adjustTodayMeal: el => {
