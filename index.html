@@ -44,23 +44,26 @@
         .btn-small { padding: 5px 10px; font-size: 12px; }
         .btn:active { background: var(--secondary-text); color: var(--primary-bg); }
         .btn-secondary:active { background: var(--primary-text); color: var(--primary-bg); }
-        .meal-item { padding: 10px; border: 1px solid var(--border-color); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .meal-item { padding: 10px; border: 1px solid var(--border-color); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .meal-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .meal-item.flash { animation: flashPulse 0.6s ease; }
         @keyframes flashPulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); background-color: #f0f8ff; } 100% { transform: scale(1); } }
-        .meal-info { flex: 1; }
-        .meal-name { font-weight: 500; margin-bottom: 2px; }
-        .meal-macros { font-size: 12px; color: var(--secondary-text); }
-        .meal-actions { display: flex; gap: 10px; min-width: 110px; justify-content: flex-end; }
+        .meal-info { flex: 1; min-width: 0; }
+        .meal-name { font-weight: 500; margin-bottom: 2px; word-wrap: break-word; overflow-wrap: break-word; }
+        .meal-macros { font-size: 12px; color: var(--secondary-text); word-wrap: break-word; overflow-wrap: break-word; }
+        .meal-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+        .portion-input { width: 50px !important; padding: 5px !important; margin: 0 !important; font-size: 12px !important; text-align: center; }
         .added { background: var(--accent-add); color: var(--primary-bg); transform: scale(1.05); }
-        .meal-count { color: #3d3d3d; font-weight: 500; margin-left: 2px; font-size: 13px; }
-        .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); transition: transform 0.2s ease; }
+        .meal-count { color: #3d3d3d; font-weight: 500; margin-left: 2px; font-size: 13px; word-wrap: break-word; overflow-wrap: break-word; }
+        .today-meal { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); gap: 10px; transition: transform 0.2s ease; flex-wrap: wrap; }
         .today-meal.updated { animation: slideScale 0.4s ease; }
         @keyframes slideScale { 0% { transform: translateX(-5px) scale(1); } 50% { transform: translateX(0) scale(1.01); } 100% { transform: translateX(0) scale(1); } }
-        .today-meal-info { flex: 1; }
+        .today-meal-info { flex: 1 1 100%; min-width: 0; }
+        .today-meal-info > div { word-wrap: break-word; overflow-wrap: break-word; }
+        .today-meal-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; flex: 0 1 auto; }
         .remove-btn { background: none; color: var(--accent-over); border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; }
         .remove-btn:active { opacity: 0.5; }
-        .decrement-btn { margin-left: 5px; -webkit-user-select: none; user-select: none; }
+        .decrement-btn { -webkit-user-select: none; user-select: none; }
         button:focus, .remove-btn:focus { outline: none; }
         .empty { color: #999; font-style: italic; padding: 20px 0; }
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--primary-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 15px 0; }
@@ -93,7 +96,13 @@
         .barcode-product-name { font-weight: 500; margin-bottom: 10px; }
         .barcode-nutrition { font-size: 14px; color: var(--secondary-text); margin-bottom: 5px; }
         .barcode-actions { display: flex; gap: 10px; margin-top: 15px; }
-        @media (max-width: 480px) { body { padding: 15px 15px 60px; } .row { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) {
+            body { padding: 15px 15px 60px; }
+            .row { grid-template-columns: 1fr; }
+            .meal-item { flex-direction: column; align-items: stretch; }
+            .meal-actions { justify-content: flex-start; }
+            .today-meal-actions { justify-content: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -126,7 +135,7 @@
         <div style="margin-bottom: 20px;"><button data-action="copyData" class="btn btn-secondary" style="margin-bottom: 10px;">Copy Data</button><textarea id="pasteData" placeholder="Or paste data here..." style="height: 100px; font-size: 12px;"></textarea><button data-action="importData" class="btn btn-secondary">Import from Paste</button></div>
     </div>
     <div class="nav"><button data-action="showSection" data-section="progress" class="active">Progress</button><button data-action="showSection" data-section="meals">Meals</button><button data-action="showSection" data-section="settings">Settings</button></div>
-    <div class="modal" id="mealModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Add Meal</h3><button class="close-btn" data-action="closeModal" data-modal="mealModal">×</button></div><form id="mealForm"><input type="text" name="mealName" placeholder="Meal name" required><div class="row"><input type="number" name="mealCalories" placeholder="Calories" min="0" required><input type="number" name="mealProtein" placeholder="Protein (g)" min="0" step="0.1" required></div><div class="row"><input type="number" name="mealCarbs" placeholder="Carbs (g)" min="0" step="0.1" required><input type="number" name="mealFat" placeholder="Fat (g)" min="0" step="0.1" required></div><div style="display: flex; gap: 10px; margin-top: 15px;"><button class="btn" type="button" data-action="addMeal">Add to Library</button><button class="btn btn-secondary" type="button" data-action="addMealAndUse">Add & Use Now</button></div></form></div></div>
+    <div class="modal" id="mealModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Add Meal</h3><button class="close-btn" data-action="closeModal" data-modal="mealModal">×</button></div><form id="mealForm"><input type="text" name="mealName" placeholder="Meal name" required><input type="number" name="mealWeight" placeholder="Weight per serving (g)" min="0" step="0.1"><div class="row"><input type="number" name="mealCalories" placeholder="Calories" min="0" required><input type="number" name="mealProtein" placeholder="Protein (g)" min="0" step="0.1" required></div><div class="row"><input type="number" name="mealCarbs" placeholder="Carbs (g)" min="0" step="0.1" required><input type="number" name="mealFat" placeholder="Fat (g)" min="0" step="0.1" required></div><div style="display: flex; gap: 10px; margin-top: 15px;"><button class="btn" type="button" data-action="addMeal">Add to Library</button><button class="btn btn-secondary" type="button" data-action="addMealAndUse">Add & Use Now</button></div></form></div></div>
     <div class="modal" id="barcodeModal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Product Found</h3><button class="close-btn" data-action="closeModal" data-modal="barcodeModal">×</button></div><div id="barcodeResult"></div></div></div>
     <div class="modal confirm-modal" id="confirmModal"><div class="modal-content"><div class="confirm-message" id="confirmMessage"></div><div class="confirm-actions"><button class="btn btn-secondary" data-action="closeModal" data-modal="confirmModal">Cancel</button><button class="btn" id="confirmButton">Confirm</button></div></div></div>
     <div id="scanner-container"><video id="scanner-video" autoplay muted playsinline></video><div class="scanner-overlay"><div class="scanner-header"><button class="scanner-close" data-action="stopScanner">Close Scanner</button></div><div class="scanner-target"></div><div class="scanner-info"><p>Point Camera at Barcode</p><p id="scannerStatus"></p></div></div></div>
@@ -137,13 +146,33 @@
         const $$ = (sel, el = document) => el.querySelectorAll(sel);
         const escapeHTML = str => String(str ?? '').replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'})[s]);
         
+        const formatPortion = (n) => {
+            const rounded = Math.round(n * 10) / 10;
+            return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+        };
+
+        // Format grams for display: 100 -> "100g", 12.5 -> "12.5g", 0/falsy -> ""
+        const formatGrams = (n) => {
+            if (!n || n <= 0) return '';
+            const rounded = Math.round(n * 10) / 10;
+            return (Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)) + 'g';
+        };
+
+        // Pull a leading numeric value out of strings like "100g", "30 g", "1 cup (240ml)"
+        const parseGrams = (val) => {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            const m = String(val).match(/(\d+(?:\.\d+)?)/);
+            return m ? parseFloat(m[1]) : 0;
+        };
+
         const defaultState = {
             targets: { calories: 2000, protein: 50, carbs: 250, fat: 65 },
             dailyIntake: { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] },
             mealLibrary: [
-                { id: Date.now() + 1, name: "Chicken Breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, servingSize: "100g" },
-                { id: Date.now() + 2, name: "Brown Rice", calories: 112, protein: 2.6, carbs: 23.5, fat: 0.9, servingSize: "100g" },
-                { id: Date.now() + 3, name: "Avocado", calories: 160, protein: 2, carbs: 9, fat: 15, servingSize: "100g" },
+                { id: Date.now() + 1, name: "Chicken Breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, weight: 100 },
+                { id: Date.now() + 2, name: "Brown Rice", calories: 112, protein: 2.6, carbs: 23.5, fat: 0.9, weight: 100 },
+                { id: Date.now() + 3, name: "Avocado", calories: 160, protein: 2, carbs: 9, fat: 15, weight: 100 },
             ],
             currentDate: new Date().toDateString(),
             scannedProduct: null
@@ -151,6 +180,19 @@
 
         let appState = JSON.parse(localStorage.getItem('nutritionAppState')) || defaultState;
         if (!localStorage.getItem('nutritionAppState')) appState.mealLibrary = defaultState.mealLibrary;
+
+        // One-time migration: convert legacy `servingSize` strings into numeric `weight` (grams).
+        // Meals where servingSize doesn't contain a number (e.g. "1 serving") get weight = 0.
+        const migrateLegacyServingSize = (meal) => {
+            if (meal && meal.weight === undefined) {
+                meal.weight = parseGrams(meal.servingSize);
+                delete meal.servingSize;
+            }
+            return meal;
+        };
+        appState.mealLibrary = (appState.mealLibrary || []).map(migrateLegacyServingSize);
+        appState.dailyIntake = appState.dailyIntake || { calories: 0, protein: 0, carbs: 0, fat: 0, meals: [] };
+        appState.dailyIntake.meals = (appState.dailyIntake.meals || []).map(migrateLegacyServingSize);
 
         const updateState = (newState) => {
             appState = { ...appState, ...newState };
@@ -195,15 +237,18 @@
             }
             list.innerHTML = filtered.map(meal => {
                 const count = appState.dailyIntake.meals.find(m => m.id === meal.id)?.portions ?? 0;
-                const { calories = 0, protein = 0, carbs = 0, fat = 0, servingSize = "1 serving", name } = meal;
+                const { calories = 0, protein = 0, carbs = 0, fat = 0, weight = 0, name } = meal;
+                const weightLabel = weight > 0 ? ` • ${formatGrams(weight)}` : '';
                 return `<div class="meal-item" data-id="${meal.id}">
                     <div class="meal-info">
-                        <div class="meal-name">${escapeHTML(name)} ${count > 0 ? `<span class="meal-count">(${count.toFixed(1).replace(/\.0$/, '')}x)</span>` : ''}</div>
-                        <div class="meal-macros">${Math.round(calories)}cal • P:${protein}g • C:${carbs}g • F:${fat}g • ${escapeHTML(servingSize)}</div>
+                        <div class="meal-name">${escapeHTML(name)} ${count > 0 ? `<span class="meal-count">(${formatPortion(count)}x)</span>` : ''}</div>
+                        <div class="meal-macros">${Math.round(calories)}cal • P:${protein}g • C:${carbs}g • F:${fat}g${weightLabel}</div>
                     </div>
                     <div class="meal-actions">
                         ${count > 0 ? `<button class="btn btn-secondary btn-small decrement-btn" data-action="adjustMeal" data-id="${meal.id}" data-delta="-1">-</button>` : ''}
                         <button class="btn btn-secondary btn-small" data-action="adjustMeal" data-id="${meal.id}" data-delta="1">+</button>
+                        <input type="number" class="portion-input" data-id="${meal.id}" placeholder="0.1" min="0.1" max="99" step="0.1" inputmode="decimal" title="Add custom portion (e.g. 0.5)">
+                        <button class="btn btn-small" data-action="addCustomPortion" data-id="${meal.id}" title="Add custom portion">Add</button>
                         <button class="btn btn-secondary btn-small" data-action="deleteMeal" data-id="${meal.id}">Del</button>
                     </div>
                 </div>`;
@@ -217,14 +262,23 @@
                 return;
             }
             list.innerHTML = appState.dailyIntake.meals.map((meal, index) => {
-                const { name, portions, calories = 0, protein = 0, carbs = 0, fat = 0 } = meal;
+                const { name, portions } = meal;
+                const baseMeal = appState.mealLibrary.find(m => m.id === meal.id) || meal;
+                const calories = (baseMeal.calories || 0) * portions;
+                const protein = (baseMeal.protein || 0) * portions;
+                const carbs = (baseMeal.carbs || 0) * portions;
+                const fat = (baseMeal.fat || 0) * portions;
+                const totalGrams = (baseMeal.weight || 0) * portions;
+                const gramsLabel = totalGrams > 0 ? ` • ${formatGrams(totalGrams)}` : '';
                 return `<div class="today-meal" data-index="${index}">
                     <div class="today-meal-info">
-                        <div>${escapeHTML(name)} ${portions > 1 ? `<span class="meal-count">(${portions.toFixed(1).replace(/\.0$/, '')}x)</span>` : ''}</div>
-                        <div class="meal-count">${Math.round(calories)}cal • P:${protein.toFixed(1)}g • C:${carbs.toFixed(1)}g • F:${fat.toFixed(1)}g</div>
+                        <div>${escapeHTML(name)} <span class="meal-count">(${formatPortion(portions)}x)</span></div>
+                        <div class="meal-count">${Math.round(calories)}cal • P:${protein.toFixed(1)}g • C:${carbs.toFixed(1)}g • F:${fat.toFixed(1)}g${gramsLabel}</div>
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div class="today-meal-actions">
                         <button class="btn btn-secondary btn-small" data-action="adjustTodayMeal" data-index="${index}" data-delta="-1">-</button>
+                        <button class="btn btn-secondary btn-small" data-action="adjustTodayMeal" data-index="${index}" data-delta="-0.1">-0.1</button>
+                        <button class="btn btn-secondary btn-small" data-action="adjustTodayMeal" data-index="${index}" data-delta="0.1">+0.1</button>
                         <button class="btn btn-secondary btn-small" data-action="adjustTodayMeal" data-index="${index}" data-delta="1">+</button>
                         <button class="remove-btn" data-action="removeTodayMeal" data-index="${index}">Remove</button>
                     </div>
@@ -252,7 +306,7 @@
             let meals = [...appState.dailyIntake.meals];
             const mealIndex = meals.findIndex(m => m.id === mealId);
             const currentPortions = mealIndex > -1 ? meals[mealIndex].portions : 0;
-            const newPortions = currentPortions + delta;
+            const newPortions = Math.round((currentPortions + delta) * 10) / 10;
 
             if (newPortions < 0.1) {
                 meals = meals.filter(m => m.id !== mealId);
@@ -274,6 +328,7 @@
 
         const getMealFromForm = (form) => {
             const data = new FormData(form);
+            const weightRaw = data.get('mealWeight');
             return {
                 id: Date.now(),
                 name: data.get('mealName').trim(),
@@ -281,7 +336,7 @@
                 protein: parseFloat(data.get('mealProtein')) || 0,
                 carbs: parseFloat(data.get('mealCarbs')) || 0,
                 fat: parseFloat(data.get('mealFat')) || 0,
-                servingSize: "1 serving"
+                weight: weightRaw !== null && weightRaw !== '' ? parseFloat(weightRaw) || 0 : 0
             };
         };
 
@@ -331,7 +386,30 @@
             deleteMeal: el => showConfirm("Delete this meal?", () => {
                 updateState({ mealLibrary: appState.mealLibrary.filter(m => m.id !== parseInt(el.dataset.id)) });
             }),
-            adjustMeal: el => adjustMeal(parseInt(el.dataset.id), parseFloat(el.dataset.delta)),
+            adjustMeal: el => {
+                adjustMeal(parseInt(el.dataset.id), parseFloat(el.dataset.delta));
+                const search = $('#mealSearch');
+                if (search.value !== '') {
+                    search.value = '';
+                    renderMealLibrary();
+                }
+            },
+            addCustomPortion: el => {
+                const id = parseInt(el.dataset.id);
+                const input = $(`.portion-input[data-id="${id}"]`);
+                const amount = parseFloat(input.value);
+                if (!amount || amount <= 0) {
+                    input.focus();
+                    return;
+                }
+                adjustMeal(id, amount);
+                input.value = '';
+                const search = $('#mealSearch');
+                if (search.value !== '') {
+                    search.value = '';
+                    renderMealLibrary();
+                }
+            },
             adjustTodayMeal: el => {
                 const meal = appState.dailyIntake.meals[el.dataset.index];
                 if (meal) adjustMeal(meal.id, parseFloat(el.dataset.delta));
@@ -344,7 +422,10 @@
             importData: () => showConfirm('Replace all data with imported data?', () => {
                 try {
                     const imported = JSON.parse($('#pasteData').value.trim());
-                    localStorage.setItem('nutritionAppState', JSON.stringify(imported)); // bypass updateState to fully replace
+                    // Re-run migration on imported data so older exports remain compatible
+                    if (imported.mealLibrary) imported.mealLibrary = imported.mealLibrary.map(migrateLegacyServingSize);
+                    if (imported.dailyIntake?.meals) imported.dailyIntake.meals = imported.dailyIntake.meals.map(migrateLegacyServingSize);
+                    localStorage.setItem('nutritionAppState', JSON.stringify(imported));
                     appState = imported;
                     $('#pasteData').value = '';
                     init();
@@ -387,6 +468,13 @@
                 handlers[actionElement.dataset.action](actionElement);
             }
         });
+
+        document.body.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && e.target.classList.contains('portion-input')) {
+                e.preventDefault();
+                handlers.addCustomPortion(e.target);
+            }
+        });
         
         $('#mealSearch').addEventListener('input', renderMealLibrary);
         $('#confirmButton').addEventListener('click', () => {
@@ -406,6 +494,14 @@
                 
                 const p = data.product;
                 const n = p.nutriments;
+                // Try to derive a numeric weight (g). If macros are per-serving, prefer serving_quantity
+                // (numeric) or parse the serving_size string. Otherwise the macros are per-100g.
+                let weight = 0;
+                if (n['energy-kcal_serving'] != null) {
+                    weight = parseFloat(p.serving_quantity) || parseGrams(p.serving_size) || 0;
+                } else if (n['energy-kcal_100g'] != null) {
+                    weight = 100;
+                }
                 const scannedProduct = {
                     id: Date.now(),
                     name: `${p.product_name || 'Unknown'} (${p.brands || ''})`.trim(),
@@ -413,12 +509,13 @@
                     protein: parseFloat(n.proteins_serving ?? n.proteins_100g ?? 0),
                     carbs: parseFloat(n.carbohydrates_serving ?? n.carbohydrates_100g ?? 0),
                     fat: parseFloat(n.fat_serving ?? n.fat_100g ?? 0),
-                    servingSize: p.serving_size || '100g'
+                    weight: weight
                 };
                 updateState({ scannedProduct });
+                const weightLabel = scannedProduct.weight > 0 ? `Per ${formatGrams(scannedProduct.weight)}` : 'Per serving';
                 resultDiv.innerHTML = `<div class="barcode-result">
                     <div class="barcode-product-name">${escapeHTML(scannedProduct.name)}</div>
-                    <div class="barcode-nutrition">Per ${escapeHTML(scannedProduct.servingSize)}</div>
+                    <div class="barcode-nutrition">${escapeHTML(weightLabel)}</div>
                     <div class="barcode-nutrition">Calories: ${scannedProduct.calories} | P: ${scannedProduct.protein.toFixed(1)}g | C: ${scannedProduct.carbs.toFixed(1)}g | F: ${scannedProduct.fat.toFixed(1)}g</div>
                     <div class="barcode-actions">
                         <button class="btn" data-action="addScannedProduct">Add to Library</button>
